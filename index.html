@@ -979,7 +979,7 @@
     async function confirmTopUpPayment(){
       const {orderId,phone,amount}=paymentContext;
       const button=document.querySelector('#paymentModal .primary-btn');if(button)button.disabled=true;
-      setLoading(true,"Đang xác nhận thanh toán…","Thường mất 5-15 giây tuỳ mạng.");
+      setLoading(true,"Đang xác nhận thanh toán…","Kết nối thường mất 5-15 giây.");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"confirmTopUpPayment",key:APP_SECRET,order_id:orderId,verify_phone:phone,amount})},20000);
@@ -1043,7 +1043,7 @@
       };
       if(!fields.facebook_name){showEditOrderError("Vui lòng nhập Tên Facebook.");return}
       if(fields.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showEditOrderError("Email chưa đúng định dạng.");return}
-      const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…","Thường mất 5-15 giây tuỳ mạng.");
+      const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…","Kết nối thường mất 5-15 giây.");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"updateOrderAddress",key:APP_SECRET,...fields})},20000);
@@ -1108,7 +1108,7 @@
       const cartTotal=groupSubtotal-groupDiscount;
       const confirmationItems=orderItems.map(i=>({code:i.id,album:i.album,specificationName:i.specificationName||i.specification||i.id,quantity:i.quantity}));
       const order={order_id:"TD"+Date.now().toString().slice(-8),order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
-      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10-20 giây.","Squat thêm 1 cái trong lúc chờ 🍻~");
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10-20 giây.","Có thể squat 1 cái trong lúc chờ 🥂~");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",key:APP_SECRET,order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},20000);
