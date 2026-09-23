@@ -306,14 +306,19 @@
         return await fetch(url, {...options, signal: controller.signal});
       } finally { clearTimeout(timer); }
     }
-    // Gọi fetchWithTimeout và tự thử lại 1 lần nếu lần đầu thất bại (mất mạng chớp nhoáng,
-    // Apps Script cold start…) trước khi báo lỗi cho người dùng.
+    // Gọi fetchWithTimeout và tự thử lại nếu lần đầu thất bại (mất mạng chớp nhoáng,
+    // Apps Script cold start, hoặc Google trả lỗi 404/50x thoáng qua…) trước khi báo lỗi cho người dùng.
+    // Thử lại cả khi có lỗi mạng lẫn khi phản hồi HTTP không thành công (ví dụ 404 tạm thời từ Apps Script).
     async function fetchWithRetry(url, options, timeoutMs, retries){
-      let lastError;
+      let lastError, lastResponse;
       for(let attempt=0; attempt <= retries; attempt++){
-        try{ return await fetchWithTimeout(url, options, timeoutMs); }
-        catch(error){ lastError = error; }
+        try{
+          const response = await fetchWithTimeout(url, options, timeoutMs);
+          if(response.ok) return response;
+          lastResponse = response;
+        }catch(error){ lastError = error; }
       }
+      if(lastResponse) return lastResponse;
       throw lastError;
     }
 
@@ -396,7 +401,7 @@
       setSyncState("loading");
       try{
         if(forceRefresh) await clearProductsCache();
-        const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products&ts=${Date.now()}`,{cache:"no-store"},12000,1);
+        const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products&ts=${Date.now()}`,{cache:"no-store"},12000,2);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
         const payload=await response.json();
         if(!payload.ok || !Array.isArray(payload.products)) throw new Error(payload.error || "Dữ liệu không hợp lệ");
@@ -882,7 +887,7 @@
       // thể chậm hơn bình thường (Apps Script "thức dậy" sau khi rảnh + sheet vừa ghi xong cần
       // tính lại công thức) — cho thêm thời gian để tránh báo lỗi oan trong khi dữ liệu thật ra
       // đã sẵn sàng chỉ vài giây sau.
-      const response=await fetchWithRetry(url,{method:"GET"},20000,1);if(!response.ok)throw new Error("network");
+      const response=await fetchWithRetry(url,{method:"GET"},20000,2);if(!response.ok)throw new Error("network");
       const payload=await response.json();if(payload && payload.ok===false)throw new Error(payload.error || "lookup");
       return orderRows(payload);
     }
