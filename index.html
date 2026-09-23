@@ -1098,7 +1098,7 @@
       const missing=missingBundleRequirements();
       if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
       if(!paymentConfirmed){updatePaymentModalInfo();document.getElementById("paymentModal").classList.add("show");return}
-      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây.","Có thể squat 1 cái trong lúc chờ 🥂~");
+      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       await loadProducts(false);
       const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
       if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm “${unavailable.album}” không còn đủ tồn kho. Vui lòng cập nhật giỏ hàng.`);reconcileCart();updateCartUI();return}
@@ -1108,7 +1108,7 @@
       const cartTotal=groupSubtotal-groupDiscount;
       const confirmationItems=orderItems.map(i=>({code:i.id,album:i.album,specificationName:i.specificationName||i.specification||i.id,quantity:i.quantity}));
       const order={order_id:"TD"+Date.now().toString().slice(-8),order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
-      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10 giây.","Có thể squat 1 cái trong lúc chờ 🥂~");
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10 giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",key:APP_SECRET,order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},20000);
