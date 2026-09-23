@@ -320,6 +320,9 @@
     };
     const total = () => Math.max(0, subtotal() - comboDiscount());
     const defaultPromotions = ["Mua từ 3 sản phẩm bất kì giảm 10k tổng đơn","Mua từ 3 sản phẩm The Sin : Bliss phân loại Member giảm 10k tổng đơn","Mua Take 1 kèm 1 trong các Take 4 và Take 2 giảm 10k tổng đơn"];
+    // Dự phòng khi API không trả về Combo Brief nào (gần như không xảy ra thực tế) — mã ngắn
+    // "combo 3" khớp đúng cú pháp mới của cột Combo Brief (xem parseComboClauses/comboDiscount).
+    const defaultComboBriefs = ["3"];
 
     function normalizeKey(key){
       return String(key || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
@@ -391,7 +394,7 @@
         if(!fresh.length) throw new Error("Không tìm thấy sản phẩm hợp lệ");
         products=fresh; promotions=Array.isArray(payload.promotions) && payload.promotions.length
           ? payload.promotions.map(value=>String(value).trim()).filter(Boolean)
-          : [...new Set(fresh.map(product=>product.comboBrief).filter(Boolean))];
+          : defaultPromotions;
         try{
           localStorage.setItem(PRODUCT_CACHE_KEY,JSON.stringify({products:payload.products,promotions:promotions,savedAt:Date.now()}));
         }catch(cacheError){ console.warn("Không thể lưu bộ nhớ tạm sản phẩm",cacheError); }
@@ -412,7 +415,7 @@
         const fresh=normalizeProducts(cached.products);
         if(!fresh.length) return false;
         products=fresh;
-        promotions=Array.isArray(cached.promotions) ? cached.promotions : [...new Set(fresh.map(product=>product.comboBrief).filter(Boolean))];
+        promotions=Array.isArray(cached.promotions) ? cached.promotions : defaultPromotions;
         renderPromotions(); reconcileCart(); renderCategories(); renderProducts(); updateCartUI();
         setSyncState("ready");
         return true;
@@ -522,30 +525,70 @@
       banner.innerHTML=list.length ? promotionMarkup(list) : "";
       banner.classList.toggle("show",list.length>0);
     }
+    // Bản JS tương đương parseComboClauses_/evaluateComboClause_ bên Code.gs (xem chú thích ở
+    // đó) — dùng để xem trước số tiền giảm ngay trên giỏ hàng, TRƯỚC khi khách bấm đặt hàng.
+    // Kết quả cuối cùng, chính thức vẫn do backend tính lại lúc lưu đơn (createOrder_) để tránh
+    // gian lận/giả mạo phía client.
+    function parseComboClauses(raw){
+      const text=String(raw || "").trim();
+      if(!text) return [];
+      const parts=text.split(/\s*\+\s*combo\s+/i);
+      const clauses=[];
+      parts.forEach((part,index)=>{
+        let clause=index===0 ? part.replace(/^combo\s+/i,"") : part;
+        clause=clause.replace(/\([^)]*\)/g,"").trim();
+        if(!clause) return;
+        const parsed=parseComboClause(clause);
+        if(parsed) clauses.push(parsed);
+      });
+      return clauses;
+    }
+    function parseComboClause(clause){
+      let spec=clause, amount=0;
+      const equalsIndex=clause.indexOf("=");
+      if(equalsIndex>=0){
+        spec=clause.slice(0,equalsIndex).trim();
+        const amountMatch=clause.slice(equalsIndex+1).match(/-?([\d.,]+)\s*đ/i);
+        amount=amountMatch?parseNumber(amountMatch[1]):0;
+      }
+      const countMatch=spec.match(/^(\d+)\s*(.*)$/);
+      if(countMatch) return {type:"count",count:Number(countMatch[1]),scope:countMatch[2].trim().toLowerCase(),amount:amount||10000};
+      if(!amount) return null;
+      const groups=spec.split(/\s*\+\s*/).map(group=>group.split(/\s+or\s+/i).map(name=>name.trim().toLowerCase()).filter(Boolean)).filter(group=>group.length);
+      if(!groups.length) return null;
+      return {type:"bundle",groups,amount};
+    }
+    function comboScopeMatchesItem(scope,item){
+      if(!scope||scope.includes("bất kì")||scope.includes("bất kỳ")) return true;
+      const album=String(item.album || "").toLowerCase(), specification=String(item.specification || "").toLowerCase(), specificationName=String(item.specificationName || "").toLowerCase();
+      return scope.includes(album)||scope.includes(specification)||scope.includes(specificationName);
+    }
+    function evaluateComboClause(clause){
+      if(clause.type==="count"){
+        const eligible=cart.reduce((sum,item)=>comboScopeMatchesItem(clause.scope,item)?sum+item.quantity:sum,0);
+        return eligible>=clause.count?clause.amount:0;
+      }
+      if(clause.type==="bundle"){
+        const selectedNames=cart.filter(item=>item.quantity>0).map(item=>String(item.specificationName || "").toLowerCase());
+        const satisfied=clause.groups.every(group=>group.some(name=>selectedNames.some(selected=>selected.includes(name))));
+        return satisfied?clause.amount:0;
+      }
+      return 0;
+    }
     function comboDiscount(){
-      const briefs=promotions.length?promotions:defaultPromotions;
+      const seen={}, briefs=[];
+      products.forEach(product=>{
+        const brief=String(product.comboBrief || "").trim();
+        if(brief && !seen[brief]){ seen[brief]=true; briefs.push(brief); }
+      });
+      const source=briefs.length?briefs:defaultComboBriefs;
       let discount=0;
-      briefs.forEach(brief=>{
-        const amountMatch=brief.match(/giảm\s*([\d.,]+)\s*k/i), amount=amountMatch?parseNumber(amountMatch[1])*1000:0;
-        const threshold=brief.match(/mua\s*từ\s*(\d+)\s*sản phẩm\s+(.+?)\s+giảm/i);
-        if(threshold&&amount){
-          const scope=threshold[2].toLowerCase(), count=Number(threshold[1]);
-          const requiresReady=scope.includes("có sẵn");
-          const requiresPreorder=scope.includes("pre-order")||scope.includes("preorder")||scope.includes("pre order");
-          const eligible=cart.filter(item=>{
-            const album=String(item.album).toLowerCase(),spec=`${item.specification} ${item.specificationName}`.toLowerCase();
-            if(requiresReady && item.preorder) return false;
-            if(requiresPreorder && !item.preorder) return false;
-            return (scope.includes("bất kì")||scope.includes("bất kỳ")||scope.includes(album))&&(scope.includes("bất kì")||scope.includes("bất kỳ")||scope.includes(item.specification.toLowerCase())||scope.includes(item.specificationName.toLowerCase()));
-          }).reduce((sum,item)=>sum+item.quantity,0);
-          if(eligible>=count) discount=Math.max(discount,amount);
-        }
-        const pair=brief.match(/mua\s+(.+?)\s+kèm.+?\s+(.+?)\s+giảm/i);
-        if(pair&&amount){
-          const names=[pair[1],pair[2]].map(value=>value.toLowerCase());
-          const selected=cart.map(item=>String(item.specificationName).toLowerCase());
-          if(names.every(name=>selected.some(value=>value.includes(name)))) discount=Math.max(discount,amount);
-        }
+      source.forEach(brief=>{
+        // Các mệnh đề nối bằng "+" trong CÙNG 1 ô Combo Brief được cộng dồn; giữa các ô khác
+        // nhau thì vẫn lấy mức giảm lớn nhất, giống hệt logic phía backend.
+        const clauses=parseComboClauses(brief);
+        const briefTotal=clauses.reduce((sum,clause)=>sum+evaluateComboClause(clause),0);
+        discount=Math.max(discount,briefTotal);
       });
       return discount;
     }
