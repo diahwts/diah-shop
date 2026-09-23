@@ -287,6 +287,10 @@
   </div>
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDTpP4BjSaVRJ2i0ZWRStekdsH0Q-rFMAVD6J6aoieXeSX2hFB8eRDUHRIbdhdMOvLhw/exec";
+    // Phải khớp CHÍNH XÁC với APP_SHARED_SECRET trong Code.gs. Đây là hàng rào chặn bot/script
+    // dò URL Web App một cách mù quáng — không phải bí mật tuyệt đối (ai xem mã nguồn trang này
+    // đều thấy được), nhưng chặn được phần lớn truy cập tự động từ bên ngoài trang web.
+    const APP_SECRET = "diah-wts-2025-k9x2";
     let products = [], cart = [], promotions = [], selectedCategory = "all", selectedProduct = null, selectedVariant = null, checkoutKind = "ready";
     const PRODUCT_CACHE_KEY = "diah-products-cache-v2";
     const CHECKOUT_DRAFT_KEY = "diah-checkout-draft-v1";
@@ -385,7 +389,7 @@
     }
 
     async function clearProductsCache(){
-      await fetchWithRetry(`${APPS_SCRIPT_URL}?action=clearProductsCache&ts=${Date.now()}`,{cache:"no-store"},12000,1);
+      await fetchWithRetry(`${APPS_SCRIPT_URL}?action=clearProductsCache&key=${encodeURIComponent(APP_SECRET)}&ts=${Date.now()}`,{cache:"no-store"},12000,1);
     }
     async function loadProducts(showOverlay=false, forceRefresh=false){
       if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…");
@@ -865,8 +869,12 @@
       state.className="order-state";state.hidden=true;results.hidden=false;lucide.createIcons();
     }
     async function fetchOrdersByPhone(phone){
-      const url=`${APPS_SCRIPT_URL}?action=orders&phone=${encodeURIComponent(phone)}`;
-      const response=await fetchWithRetry(url,{method:"GET"},12000,1);if(!response.ok)throw new Error("network");
+      const url=`${APPS_SCRIPT_URL}?action=orders&phone=${encodeURIComponent(phone)}&key=${encodeURIComponent(APP_SECRET)}`;
+      // Tăng timeout (12s→20s) và giữ 1 lần thử lại: lần tra cứu đầu tiên sau khi vừa đặt đơn có
+      // thể chậm hơn bình thường (Apps Script "thức dậy" sau khi rảnh + sheet vừa ghi xong cần
+      // tính lại công thức) — cho thêm thời gian để tránh báo lỗi oan trong khi dữ liệu thật ra
+      // đã sẵn sàng chỉ vài giây sau.
+      const response=await fetchWithRetry(url,{method:"GET"},20000,1);if(!response.ok)throw new Error("network");
       const payload=await response.json();if(payload && payload.ok===false)throw new Error(payload.error || "lookup");
       return orderRows(payload);
     }
@@ -875,12 +883,12 @@
       const input=document.getElementById("orderLookupPhone"),error=document.getElementById("orderLookupError"),state=document.getElementById("orderLookupState"),results=document.getElementById("orderResults"),banner=document.getElementById("orderUpdatedBanner"),time=document.getElementById("orderUpdatedTime"),button=event.currentTarget.querySelector("button");
       const phone=input.value.trim().replace(/\s/g,"");error.classList.remove("show");banner.hidden=true;
       if(!phone){error.textContent="Vui lòng nhập số điện thoại.";error.classList.add("show");return}
-      button.disabled=true;state.hidden=false;state.className="order-state";state.textContent="Đang tra cứu đơn hàng…";results.hidden=true;results.replaceChildren();
+      button.disabled=true;state.hidden=false;state.className="order-state";state.textContent="Đang tra cứu đơn hàng… (nếu vừa đặt hàng xong, có thể mất tới 15-20 giây)";results.hidden=true;results.replaceChildren();
       try{
         currentOrdersPhone=phone;
         renderOrderResults(await fetchOrdersByPhone(phone));
         time.textContent=`Lúc ${new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}`;banner.hidden=false;
-      }catch(errorValue){state.hidden=false;state.className="order-state error";state.textContent="Không thể tra cứu lúc này. Vui lòng thử lại sau."}
+      }catch(errorValue){state.hidden=false;state.className="order-state error";state.textContent="Không thể tra cứu lúc này. Vui lòng đợi vài giây rồi bấm Tra cứu lại (không cần tải lại trang)."}
       button.disabled=false;
     }
     document.getElementById("orderLookupForm").addEventListener("submit",lookupOrders);
@@ -950,7 +958,7 @@
       setLoading(true,"Đang xác nhận thanh toán…");
       let result;
       try{
-        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"confirmTopUpPayment",order_id:orderId,verify_phone:phone,amount})},20000);
+        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"confirmTopUpPayment",key:APP_SECRET,order_id:orderId,verify_phone:phone,amount})},20000);
         result=await response.json();
       }catch(error){setLoading(false);if(button)button.disabled=false;showToast("Không thể kết nối Google Sheet. Vui lòng thử lại.");return}
       setLoading(false);if(button)button.disabled=false;
@@ -1014,7 +1022,7 @@
       const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…");
       let result;
       try{
-        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"updateOrderAddress",...fields})},20000);
+        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"updateOrderAddress",key:APP_SECRET,...fields})},20000);
         result=await response.json();
       }catch(error){setLoading(false);button.disabled=false;showEditOrderError("Không thể kết nối Google Sheet. Vui lòng thử lại.");return}
       setLoading(false);button.disabled=false;
@@ -1079,7 +1087,7 @@
       setLoading(true,"Đang lưu đơn hàng…");
       let result;
       try{
-        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},20000);
+        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",key:APP_SECRET,order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},20000);
         result=await response.json();
       }catch(error){
         setLoading(false);button.disabled=false;showFormError("Không thể kết nối Google Sheet. Vui lòng thử lại.");return;
