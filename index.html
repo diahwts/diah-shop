@@ -3,6 +3,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Diah.wts Shop</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='76' text-anchor='middle' font-size='82'%3E%F0%9F%AA%BD%3C/text%3E%3C/svg%3E">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
     :root{--ink:#102b46;--white:#fff;--mist:#f7fbfb;--pastel:#cfe8e8;--pink:#ffdce8;--line:#d9d9d9;--muted:#777}
@@ -287,7 +288,7 @@
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDTpP4BjSaVRJ2i0ZWRStekdsH0Q-rFMAVD6J6aoieXeSX2hFB8eRDUHRIbdhdMOvLhw/exec";
     let products = [], cart = [], promotions = [], selectedCategory = "all", selectedProduct = null, selectedVariant = null, checkoutKind = "ready";
-    const PRODUCT_CACHE_KEY = "diah-products-cache-v1";
+    const PRODUCT_CACHE_KEY = "diah-products-cache-v2";
     const CHECKOUT_DRAFT_KEY = "diah-checkout-draft-v1";
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
     let currentOrders = [], currentOrdersPhone = "", paymentContext = {mode:"checkout"};
@@ -377,16 +378,21 @@
         const salePrice=parseNumber(pick(row,["salePrice","Sale Price","Giá giảm","Giá khuyến mãi"]));
         const discountLabel=pick(row,["discountLabel","Discount","Giảm giá","Mức giảm"]);
         const comboBrief=pick(row,["comboBrief","Combo Brief","Promo Brief","Khuyến mãi","Combo"]);
+        const bannerBrief=pick(row,["bannerBrief","Banner Brief","Nội dung banner","Banner"]);
         const bundleBrief=pick(row,["bundleBrief","Kèm brief","Kem brief","Kèm","Bundle Brief"]);
-        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate};
+        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate};
       }).filter(Boolean);
     }
 
-    async function loadProducts(showOverlay=false){
+    async function clearProductsCache(){
+      await fetchWithRetry(`${APPS_SCRIPT_URL}?action=clearProductsCache&ts=${Date.now()}`,{cache:"no-store"},12000,1);
+    }
+    async function loadProducts(showOverlay=false, forceRefresh=false){
       if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…");
       setSyncState("loading");
       try{
-        const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products`,{cache:"no-store"},12000,1);
+        if(forceRefresh) await clearProductsCache();
+        const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products&ts=${Date.now()}`,{cache:"no-store"},12000,1);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
         const payload=await response.json();
         if(!payload.ok || !Array.isArray(payload.products)) throw new Error(payload.error || "Dữ liệu không hợp lệ");
@@ -432,45 +438,42 @@
       else if(state==="error"){status.textContent="Không thể tải sản phẩm";time.textContent=products.length ? "Đang hiển thị dữ liệu gần nhất" : "";}
       else {status.textContent="Sản phẩm đã cập nhật";time.textContent=lastSync ? `Lúc ${lastSync.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}` : "";}
     }
-    function refreshProducts(){ loadProducts(true); }
-    function promotionMentionsProduct(brief, product){
-      const text=String(brief || "").toLowerCase();
-      return [product.group,product.album,product.specification,product.specificationName]
-        .filter(Boolean)
-        .some(value=>text.includes(String(value).toLowerCase()));
+    function refreshProducts(){ loadProducts(true,true); }
+    function normalizeText(value){return String(value || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ")}
+    function parseBannerTexts(raw){
+      const text=String(raw || "");
+      const quoted=[...text.matchAll(/"([^"]*)"/g)].map(match=>match[1].trim()).filter(Boolean);
+      return quoted.length ? quoted : text.split(/[\n;]+/).map(value=>value.trim()).filter(Boolean);
     }
-    function promotionMatchesAlbum(brief, album){
-      const text=String(brief || "").toLowerCase();
-      const albumText=String(album || "").trim().toLowerCase();
-      if(!text || !albumText) return false;
-      return text.includes(albumText);
+    function addUnique(target, text){
+      if(text && !target.includes(text)) target.push(text);
     }
-    function isGlobalPromotion(brief){
-      const text=String(brief || "").toLowerCase();
-      if(!text) return false;
-      const mentionsKnownProduct=products.some(product=>promotionMentionsProduct(text,product));
-      return !mentionsKnownProduct;
+    function isGlobalBannerText(text){
+      const key=normalizeText(text);
+      return key.includes("bat ki") || key.includes("bat ky") || key.includes("toan shop") || key.includes("tat ca san pham");
     }
-    function promotionAppliesToProduct(brief, product){
-      const text=String(brief || "").toLowerCase();
-      if(isGlobalPromotion(text)) return true;
-      const albumMentioned=products.some(candidate=>candidate.album && text.includes(String(candidate.album).toLowerCase()));
-      const specificationMentioned=products.some(candidate=>[candidate.specification,candidate.specificationName]
-        .filter(Boolean)
-        .some(value=>text.includes(String(value).toLowerCase())));
-      const currentSpecificationMentioned=[product.specification,product.specificationName]
-        .filter(Boolean)
-        .some(value=>text.includes(String(value).toLowerCase()));
-      if(specificationMentioned) return currentSpecificationMentioned;
-      return albumMentioned && promotionMentionsProduct(text,product);
-    }
-    function promotionAppliesToAlbum(brief, variants){
-      const text=String(brief || "").toLowerCase();
-      if(isGlobalPromotion(text)) return true;
-      const knownAlbumMentioned=products.some(product=>product.album && text.includes(String(product.album).toLowerCase()));
-      if(variants.some(product=>product.album && text.includes(String(product.album).toLowerCase()))) return true;
-      if(knownAlbumMentioned) return false;
-      return false;
+    function bannerPromotionGroups(){
+      const albumNames=[...new Set(products.map(product=>String(product.album || "").trim()).filter(Boolean))];
+      const albumBriefs={};
+      const globalBriefs=[];
+      products.forEach(product=>{
+        parseBannerTexts(product.bannerBrief).forEach(text=>{
+          const key=normalizeText(text);
+          const mentionedAlbums=albumNames.filter(album=>key.includes(normalizeText(album)));
+          if(mentionedAlbums.length){
+            mentionedAlbums.forEach(album=>{
+              if(!albumBriefs[album]) albumBriefs[album]=[];
+              addUnique(albumBriefs[album],text);
+            });
+          }else if(isGlobalBannerText(text)){
+            addUnique(globalBriefs,text);
+          }else if(product.album){
+            if(!albumBriefs[product.album]) albumBriefs[product.album]=[];
+            addUnique(albumBriefs[product.album],text);
+          }
+        });
+      });
+      return {albumNames,albumBriefs,globalBriefs};
     }
     function promotionText(brief, variants){
       const text=String(brief || "").trim();
@@ -487,22 +490,7 @@
       return `<strong><span class="promo-icon">🎁</span><span>Ưu đãi combo</span></strong>${list.map(text=>`<div class="promo-line"><span class="promo-bullet">•</span><span>${escapeHTML(text)}</span></div>`).join("")}`;
     }
     function renderPromotions(){
-      const source=promotions.length ? promotions : defaultPromotions;
-      const cleanSource=[...new Set(source.map(brief=>String(brief || "").trim()).filter(Boolean))];
-      const albumNames=[...new Set(products.map(product=>String(product.album || "").trim()).filter(Boolean))];
-      const albumBriefs={};
-      const globalBriefs=[];
-      cleanSource.forEach(brief=>{
-        const matchedAlbums=albumNames.filter(album=>promotionMatchesAlbum(brief,album));
-        if(matchedAlbums.length) {
-          matchedAlbums.forEach(album=>{
-            if(!albumBriefs[album]) albumBriefs[album]=[];
-            albumBriefs[album].push(brief);
-          });
-        } else {
-          globalBriefs.push(brief);
-        }
-      });
+      const {albumNames,albumBriefs,globalBriefs}=bannerPromotionGroups();
       const banner=document.getElementById("promoBanner");
       banner.innerHTML=globalBriefs.length ? promotionMarkup(globalBriefs) : "";
       banner.classList.toggle("show",globalBriefs.length>0);
@@ -520,8 +508,8 @@
     function renderDetailPromotions(product){
       const banner=document.getElementById("detailPromoBanner");
       const variants=products.filter(candidate=>candidate.group===product.group && candidate.album===product.album);
-      const source=promotions.length ? promotions : defaultPromotions;
-      const list=[...new Set(source.filter(brief=>promotionAppliesToAlbum(brief,variants)).map(brief=>promotionText(brief,variants)))];
+      const groups=bannerPromotionGroups();
+      const list=[...new Set([...groups.globalBriefs,...(groups.albumBriefs[product.album] || [])].map(brief=>promotionText(brief,variants)))];
       banner.innerHTML=list.length ? promotionMarkup(list) : "";
       banner.classList.toggle("show",list.length>0);
     }
@@ -532,6 +520,8 @@
     function parseComboClauses(raw){
       const text=String(raw || "").trim();
       if(!text) return [];
+      const legacy=parseLegacyComboClause(text);
+      if(legacy) return [legacy];
       const parts=text.split(/\s*\+\s*combo\s+/i);
       const clauses=[];
       parts.forEach((part,index)=>{
@@ -548,49 +538,85 @@
       const equalsIndex=clause.indexOf("=");
       if(equalsIndex>=0){
         spec=clause.slice(0,equalsIndex).trim();
-        const amountMatch=clause.slice(equalsIndex+1).match(/-?([\d.,]+)\s*đ/i);
-        amount=amountMatch?parseNumber(amountMatch[1]):0;
+        amount=parseComboAmount(clause.slice(equalsIndex+1));
       }
       const countMatch=spec.match(/^(\d+)\s*(.*)$/);
       if(countMatch) return {type:"count",count:Number(countMatch[1]),scope:countMatch[2].trim().toLowerCase(),amount:amount||10000};
       if(!amount) return null;
-      const groups=spec.split(/\s*\+\s*/).map(group=>group.split(/\s+or\s+/i).map(name=>name.trim().toLowerCase()).filter(Boolean)).filter(group=>group.length);
+      const groups=spec.split(/\s*\+\s*/).map(group=>group.split(/\s+or\s+/i).map(name=>cleanComboName(name)).filter(Boolean)).filter(group=>group.length);
       if(!groups.length) return null;
       return {type:"bundle",groups,amount};
     }
+    function cleanComboName(value){
+      return normalizeText(value).replace(/\([^)]*\)/g," ").replace(/\b(?:bat ki|bat ky|con lai|trong|cac|san pham|phan loai)\b/g," ").replace(/^\d+\s*/,"").replace(/\s+/g," ").trim();
+    }
+    function parseComboAmount(text){
+      const dong=String(text || "").match(/-?([\d.,]+)\s*đ/i);
+      if(dong) return parseNumber(dong[1]);
+      const nghin=String(text || "").match(/giảm\s*([\d.,]+)\s*k/i);
+      return nghin ? parseNumber(nghin[1]) * 1000 : 0;
+    }
+    function parseLegacyComboClause(text){
+      const count=text.match(/mua\s+(?:từ\s+)?(\d+)\s+sản\s*phẩm\s*(.*?)\s*giảm/i);
+      if(count) return {type:"count",count:Number(count[1]),scope:count[2].trim().toLowerCase(),amount:parseComboAmount(text)||10000};
+      const pair=text.match(/mua\s+(.+?)\s+(?:kèm|cùng)\s+1(?:\s+trong\s+(?:các\s+)?)?\s+(.+?)\s+giảm/i);
+      if(!pair) return null;
+      const base=cleanComboName(pair[1]);
+      const alternatives=pair[2].split(/\s+(?:và|hoặc|or)\s+/i).map(name=>cleanComboName(name)).filter(Boolean);
+      const amount=parseComboAmount(text)||10000;
+      return base && alternatives.length ? {type:"bundle",groups:[[base],alternatives],amount} : null;
+    }
+    function comboNameMatchesItem(name,item){
+      const target=cleanComboName(name);
+      const fields=[item.group,item.album,item.specification,item.specificationName];
+      const combined=normalizeText(fields.filter(Boolean).join(" "));
+      const words=target.split(/[^a-z0-9]+/).filter(Boolean);
+      return combined.includes(target) || fields.some(value=>normalizeText(value).includes(target)) || words.every(word=>combined.includes(word));
+    }
     function comboScopeMatchesItem(scope,item){
       if(!scope||scope.includes("bất kì")||scope.includes("bất kỳ")) return true;
-      const album=String(item.album || "").toLowerCase(), specification=String(item.specification || "").toLowerCase(), specificationName=String(item.specificationName || "").toLowerCase();
-      return scope.includes(album)||scope.includes(specification)||scope.includes(specificationName);
+      return comboNameMatchesItem(scope,item);
+    }
+    function comboGroupsSatisfied(groups,items,groupIndex=0,used=new Set()){
+      if(groupIndex>=groups.length) return true;
+      return groups[groupIndex].some(name=>items.some((item,index)=>{
+        if(used.has(index) || !comboNameMatchesItem(name,item)) return false;
+        used.add(index);
+        const ok=comboGroupsSatisfied(groups,items,groupIndex+1,used);
+        used.delete(index);
+        return ok;
+      }));
     }
     function evaluateComboClause(clause){
       if(clause.type==="count"){
-        const eligible=cart.reduce((sum,item)=>comboScopeMatchesItem(clause.scope,item)?sum+item.quantity:sum,0);
+        const eligible=cart.reduce((sum,item)=>!item.preorder && comboScopeMatchesItem(clause.scope,item)?sum+item.quantity:sum,0);
         return eligible>=clause.count?clause.amount:0;
       }
       if(clause.type==="bundle"){
-        const selectedNames=cart.filter(item=>item.quantity>0).map(item=>String(item.specificationName || "").toLowerCase());
-        const satisfied=clause.groups.every(group=>group.some(name=>selectedNames.some(selected=>selected.includes(name))));
-        return satisfied?clause.amount:0;
+        const selectedItems=cart.filter(item=>!item.preorder && item.quantity>0);
+        return comboGroupsSatisfied(clause.groups,selectedItems)?clause.amount:0;
       }
       return 0;
     }
+    function isGlobalCountClause(clause){
+      const scope=normalizeText(clause.scope || "");
+      return clause.type==="count" && (!scope || scope.includes("bat ki") || scope.includes("bat ky"));
+    }
     function comboDiscount(){
+      const readyQuantity=cart.reduce((sum,item)=>!item.preorder?sum+item.quantity:sum,0);
+      const baseDiscount=readyQuantity>=3?10000:0;
       const seen={}, briefs=[];
-      products.forEach(product=>{
+      cart.filter(item=>!item.preorder).forEach(product=>{
         const brief=String(product.comboBrief || "").trim();
-        if(brief && !seen[brief]){ seen[brief]=true; briefs.push(brief); }
+        if(brief && !seen[brief] && parseComboClauses(brief).length){ seen[brief]=true; briefs.push(brief); }
       });
-      const source=briefs.length?briefs:defaultComboBriefs;
-      let discount=0;
-      source.forEach(brief=>{
-        // Các mệnh đề nối bằng "+" trong CÙNG 1 ô Combo Brief được cộng dồn; giữa các ô khác
-        // nhau thì vẫn lấy mức giảm lớn nhất, giống hệt logic phía backend.
-        const clauses=parseComboClauses(brief);
+      let specialDiscount=0;
+      briefs.forEach(brief=>{
+        const clauses=parseComboClauses(brief).filter(clause=>!isGlobalCountClause(clause));
         const briefTotal=clauses.reduce((sum,clause)=>sum+evaluateComboClause(clause),0);
-        discount=Math.max(discount,briefTotal);
+        specialDiscount=Math.max(specialDiscount,briefTotal);
       });
-      return discount;
+      return baseDiscount + specialDiscount;
     }
     function categoryMatches(product,category){
       if(category==="all") return true;
@@ -1082,7 +1108,7 @@
 
     const dataHandler={onDataChanged(){}};
     async function initApp(){
-      lucide.createIcons();restoreCheckoutDraft();document.querySelectorAll('input[name="shipping_provider"]').forEach(input=>input.addEventListener("change",()=>{updateDeliveryFields();saveCheckoutDraft();updateCartUI()}));updateDeliveryFields();const restored=restoreCachedProducts();if(!restored){setSyncState("loading");renderCategories();renderProducts();}await loadProducts(false);
+      lucide.createIcons();restoreCheckoutDraft();document.querySelectorAll('input[name="shipping_provider"]').forEach(input=>input.addEventListener("change",()=>{updateDeliveryFields();saveCheckoutDraft();updateCartUI()}));updateDeliveryFields();const restored=restoreCachedProducts();if(!restored){setSyncState("loading");renderCategories();renderProducts();}await loadProducts(false,new URLSearchParams(location.search).has("nocache"));
       setInterval(()=>loadProducts(false),300000);
     }
     initApp();
