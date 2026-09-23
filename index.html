@@ -207,7 +207,7 @@
         <div class="form-group"><label for="facebookName">Tên Facebook *</label><input id="facebookName" type="text" required>
         </div>
         <div class="form-grid">
-         <div class="form-group"><label for="phone">Số điện thoại</label><input id="phone" type="tel" inputmode="tel"></div>
+         <div class="form-group"><label for="phone">Số điện thoại *</label><input id="phone" type="tel" inputmode="tel" required></div>
          <div class="form-group"><label for="email">Email</label><input id="email" type="email"></div>
         </div>
        </div>
@@ -875,7 +875,6 @@
       const input=document.getElementById("orderLookupPhone"),error=document.getElementById("orderLookupError"),state=document.getElementById("orderLookupState"),results=document.getElementById("orderResults"),banner=document.getElementById("orderUpdatedBanner"),time=document.getElementById("orderUpdatedTime"),button=event.currentTarget.querySelector("button");
       const phone=input.value.trim().replace(/\s/g,"");error.classList.remove("show");banner.hidden=true;
       if(!phone){error.textContent="Vui lòng nhập số điện thoại.";error.classList.add("show");return}
-      if(!/^(0|\+84)(3|5|7|8|9)\d{8}$/.test(phone)){error.textContent="Số điện thoại chưa đúng định dạng Việt Nam.";error.classList.add("show");return}
       button.disabled=true;state.hidden=false;state.className="order-state";state.textContent="Đang tra cứu đơn hàng…";results.hidden=true;results.replaceChildren();
       try{
         currentOrdersPhone=phone;
@@ -1011,7 +1010,6 @@
         payment_method:form.querySelector('input[name="edit_payment_method"]:checked')?.value || "Chuyển khoản"
       };
       if(!fields.facebook_name){showEditOrderError("Vui lòng nhập Tên Facebook.");return}
-      if(fields.phone&&!/^(0|\+84)(3|5|7|8|9)\d{8}$/.test(fields.phone.replace(/\s/g,""))){showEditOrderError("Số điện thoại chưa đúng định dạng Việt Nam.");return}
       if(fields.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showEditOrderError("Email chưa đúng định dạng.");return}
       const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…");
       let result;
@@ -1063,7 +1061,7 @@
       const fields={facebook_link:facebookLink.value.trim(),facebook_name:facebookName.value.trim(),customer_name:customerName.value.trim(),phone:phone.value.trim(),email:email.value.trim(),address_detail:addressDetail.value.trim(),note:note.value.trim(),shipping_provider:document.querySelector('input[name="shipping_provider"]:checked')?.value || "SPX"};
       if(!orderItems.length){showFormError("Nhóm sản phẩm này không có sản phẩm trong giỏ hàng.");return}
       if(!fields.facebook_name){showFormError("Vui lòng nhập Tên Facebook.");return}
-      if(fields.phone&&!/^(0|\+84)(3|5|7|8|9)\d{8}$/.test(fields.phone.replace(/\s/g,""))){showFormError("Số điện thoại chưa đúng định dạng Việt Nam.");return}
+      if(!fields.phone){showFormError("Vui lòng nhập số điện thoại.");return}
       if(fields.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showFormError("Email chưa đúng định dạng.");return}
       const missing=missingBundleRequirements();
       if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
