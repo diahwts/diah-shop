@@ -187,7 +187,7 @@
       <p class="order-intro">Nhập số điện thoại đã dùng khi đặt hàng để xem trạng thái đơn mới nhất.</p>
       <form id="orderLookupForm" class="form-card" novalidate>
        <div id="orderLookupError" class="error-box" role="alert"></div>
-       <div class="form-group"><label for="orderLookupPhone">Số điện thoại</label><input id="orderLookupPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ví dụ: 09xxxxxxxx"></div>
+       <div class="form-group"><label for="orderLookupPhone">Số điện thoại (hoặc email nếu đơn của bạn dùng email)</label><input id="orderLookupPhone" type="text" inputmode="text" autocomplete="tel" placeholder="Ví dụ: 09xxxxxxxx hoặc email"></div>
        <button class="primary-btn" type="submit">Tra cứu đơn hàng</button>
       </form>
       <div id="orderUpdatedBanner" class="order-updated-banner" hidden><span class="order-updated-text"><span id="orderUpdatedDot" class="sync-dot success"></span>Đơn hàng đã cập nhật</span><span id="orderUpdatedTime"></span></div>
@@ -269,7 +269,7 @@
      <div class="form-group"><label for="editOrderFacebookLink">Link Facebook</label><input id="editOrderFacebookLink" type="url" placeholder="https://facebook.com/..."></div>
      <div class="form-group"><label for="editOrderFacebookName">Tên Facebook *</label><input id="editOrderFacebookName" type="text"></div>
      <div class="form-grid">
-      <div class="form-group"><label for="editOrderPhone">Số điện thoại</label><input id="editOrderPhone" type="tel" inputmode="tel"></div>
+      <div class="form-group"><label for="editOrderPhone">Số điện thoại</label><input id="editOrderPhone" type="text" inputmode="text"></div>
       <div class="form-group"><label for="editOrderEmail">Email</label><input id="editOrderEmail" type="email"></div>
      </div>
      <label class="payment-choice"><input type="radio" name="edit_shipping_provider" value="SPX"><span>Ship SPX nhận hàng sau 1-4 ngày</span></label>
