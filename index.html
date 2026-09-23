@@ -401,7 +401,7 @@
       await fetchWithRetry(`${APPS_SCRIPT_URL}?action=clearProductsCache&key=${encodeURIComponent(APP_SECRET)}&ts=${Date.now()}`,{cache:"no-store"},12000,1);
     }
     async function loadProducts(showOverlay=false, forceRefresh=false){
-      if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…","Thường mất 3-6 giây, có thể lâu hơn nếu mạng yếu.","Tranh thủ hít thở sâu 1 hơi cho thư giãn nè 🌿~");
+      if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…","Thường mất 3-6 giây, có thể lâu hơn nếu mạng yếu.");
       setSyncState("loading");
       try{
         if(forceRefresh) await clearProductsCache();
@@ -900,7 +900,7 @@
       const input=document.getElementById("orderLookupPhone"),error=document.getElementById("orderLookupError"),state=document.getElementById("orderLookupState"),results=document.getElementById("orderResults"),banner=document.getElementById("orderUpdatedBanner"),time=document.getElementById("orderUpdatedTime"),button=event.currentTarget.querySelector("button");
       const phone=input.value.trim().replace(/\s/g,"");error.classList.remove("show");banner.hidden=true;
       if(!phone){error.textContent="Vui lòng nhập số điện thoại.";error.classList.add("show");return}
-      button.disabled=true;state.hidden=false;state.className="order-state";state.innerHTML='<span class="order-state-main">Đang tra cứu đơn hàng…</span><span class="order-state-sub">Nếu vừa đặt hàng xong, có thể mất tới 15-20 giây.</span><span class="order-state-tip">Tranh thủ uống ngụm nước cho mát nè 🍵~</span>';results.hidden=true;results.replaceChildren();
+      button.disabled=true;state.hidden=false;state.className="order-state";state.innerHTML='<span class="order-state-main">Đang tra cứu đơn hàng…</span><span class="order-state-sub">Nếu vừa đặt hàng xong, có thể mất tới 15-20 giây.</span>';results.hidden=true;results.replaceChildren();
       try{
         currentOrdersPhone=phone;
         renderOrderResults(await fetchOrdersByPhone(phone));
@@ -979,7 +979,7 @@
     async function confirmTopUpPayment(){
       const {orderId,phone,amount}=paymentContext;
       const button=document.querySelector('#paymentModal .primary-btn');if(button)button.disabled=true;
-      setLoading(true,"Đang xác nhận thanh toán…","Thường mất 5-15 giây tuỳ mạng.","Ngồi thẳng lưng chờ xíu cho đẹp dáng nha 💺~");
+      setLoading(true,"Đang xác nhận thanh toán…","Thường mất 5-15 giây tuỳ mạng.");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"confirmTopUpPayment",key:APP_SECRET,order_id:orderId,verify_phone:phone,amount})},20000);
@@ -1043,7 +1043,7 @@
       };
       if(!fields.facebook_name){showEditOrderError("Vui lòng nhập Tên Facebook.");return}
       if(fields.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showEditOrderError("Email chưa đúng định dạng.");return}
-      const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…","Thường mất 5-15 giây tuỳ mạng.","Uốn éo vai gáy 1 chút cho đỡ mỏi nè 🙆‍♀️~");
+      const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…","Thường mất 5-15 giây tuỳ mạng.");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"updateOrderAddress",key:APP_SECRET,...fields})},20000);
@@ -1098,7 +1098,7 @@
       const missing=missingBundleRequirements();
       if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
       if(!paymentConfirmed){updatePaymentModalInfo();document.getElementById("paymentModal").classList.add("show");return}
-      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3-8 giây.","Chờ xíu thôi, sắp xong rồi 🍃~");
+      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3-8 giây.","Có thể squat 1 cái trong lúc chờ 🥂~");
       await loadProducts(false);
       const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
       if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm “${unavailable.album}” không còn đủ tồn kho. Vui lòng cập nhật giỏ hàng.`);reconcileCart();updateCartUI();return}
@@ -1108,7 +1108,7 @@
       const cartTotal=groupSubtotal-groupDiscount;
       const confirmationItems=orderItems.map(i=>({code:i.id,album:i.album,specificationName:i.specificationName||i.specification||i.id,quantity:i.quantity}));
       const order={order_id:"TD"+Date.now().toString().slice(-8),order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
-      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10-20 giây, mong bạn đẹp chờ chút xíu nha.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10-20 giây.","Squat thêm 1 cái trong lúc chờ 🍻~");
       let result;
       try{
         const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",key:APP_SECRET,order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},20000);
