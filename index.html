@@ -537,6 +537,16 @@
       }).filter(Boolean);
     }
 
+    // Lượt gọi action=products đang chạy dở (nếu có) — DÙNG CHUNG cho MỌI nơi gọi loadProducts
+    // (tải trang lần đầu, ensureStockPrefetch, quick-retry, auto-retry, interval 5 phút, nút làm
+    // mới). Trước đây mỗi nơi tự bắn request riêng — nếu khách vừa vào trang (initApp đang tải)
+    // mà mở giỏ hàng ngay (kích hoạt ensureStockPrefetch) hoặc quick-retry/auto-retry tình cờ
+    // trùng thời điểm, NHIỀU request cùng gọi action=products SONG SONG từ CÙNG 1 tab — chúng
+    // "đá nhau" qua cờ khoá PRODUCT_READING_KEY phía server (chỉ 1 được đọc thật, số còn lại
+    // nhận {retry:true} hoặc bị timeout/huỷ ở client), góp phần vào hiện tượng "1 phút không tải
+    // được gì". Sửa: MỌI lời gọi loadProducts không phải forceRefresh, nếu thấy đã có 1 lượt
+    // đang chạy, sẽ "đi ké" (return luôn promise đang chạy) thay vì bắn thêm request mới.
+    let productsLoadPromise = null;
     async function loadProducts(showOverlay=false, forceRefresh=false, opts={}){
       // opts.maxAgeMs: nếu đã có dữ liệu sản phẩm mới tải trong khoảng thời gian này, bỏ qua
       // hẳn việc gọi mạng và dùng luôn dữ liệu đang có — dùng cho bước "kiểm tra tồn kho" ngay
@@ -546,6 +556,25 @@
         setSyncState("ready");
         return;
       }
+      if(productsLoadPromise){
+        if(forceRefresh){
+          // Làm mới CHỦ ĐỘNG (khách bấm nút): đợi lượt đang chạy dở kết thúc trước (không chồng
+          // 2 lượt đọc COGS cùng lúc), rồi mới tự chạy lượt force-refresh của riêng mình.
+          await productsLoadPromise.catch(()=>{});
+        } else {
+          // Không phải forceRefresh: dùng luôn kết quả của lượt đang chạy thay vì bắn request mới.
+          return productsLoadPromise;
+        }
+      }
+      const runPromise = doLoadProducts_(showOverlay, forceRefresh, opts);
+      productsLoadPromise = runPromise;
+      try{
+        await runPromise;
+      } finally {
+        if(productsLoadPromise === runPromise) productsLoadPromise = null;
+      }
+    }
+    async function doLoadProducts_(showOverlay, forceRefresh, opts){
       if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…","Kết nối thường mất 3 giây, có thể lâu hơn nếu mạng yếu.");
       setSyncState("loading");
       try{
