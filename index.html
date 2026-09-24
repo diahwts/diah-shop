@@ -925,6 +925,7 @@
         const paymentBrief=orderField(row,["payment_brief"],"");
         const shippingStatus=orderField(row,["shipping_status"],"Chờ cập nhật");
         const shippingBrief=orderField(row,["shipping_brief"],"");
+        const shippingProvider=orderField(row,["shipping_provider"],"");
         const trackingUrl=safeUrl(pick(row,["tracking_url"]));
         const date=pick(row,["order_time"]);
         const total=Number(pick(row,["total"])||0);
@@ -945,7 +946,8 @@
         badges.innerHTML=`<div class="order-status-group payment ${paymentStatusClass}"><span class="order-status-label">Thanh toán: ${escapeHTML(paymentStatus)}</span>${paymentBrief?`<span class="order-status-brief">${escapeHTML(paymentBrief)}</span>`:""}</div><div class="order-status-group ${shippingStatusClass}"><span class="order-status-label">Giao hàng: ${escapeHTML(shippingStatus)}</span>${shippingBrief?`<span class="order-status-brief">${escapeHTML(shippingBrief)}</span>`:""}</div>`;
         const copy=document.createElement("p");copy.className="order-brief";copy.style.whiteSpace="pre-line";copy.textContent=itemsText;
         const meta=document.createElement("div");meta.className="order-meta";
-        meta.innerHTML=`<div>Tổng thanh toán: <strong>${money(total)}</strong></div>${trackingUrl?`<div>Mã vận đơn: <a class="order-link" href="${trackingUrl}" target="_blank" rel="noopener">${escapeHTML(trackingUrl)}</a></div>`:"<div>Mã vận đơn: <strong>Chưa cập nhật</strong></div>"}`;
+        const shippingProviderPrefix=shippingProvider?`${escapeHTML(shippingProvider)} `:"";
+        meta.innerHTML=`<div>Tổng thanh toán: <strong>${money(total)}</strong></div>${trackingUrl?`<div>Mã vận đơn: ${shippingProviderPrefix}<a class="order-link" href="${trackingUrl}" target="_blank" rel="noopener">${escapeHTML(trackingUrl)}</a></div>`:"<div>Mã vận đơn: <strong>Chưa cập nhật</strong></div>"}`;
         const contact=document.createElement("div");contact.className="order-contact";
         contact.innerHTML=`<div class="order-contact-head"><strong>Thông tin nhận hàng</strong><button type="button" class="order-edit-btn" data-order-code="${escapeHTML(code)}"><i data-lucide="pencil"></i> Sửa</button></div><div class="order-contact-line"><span>Người nhận:</span><strong>${escapeHTML(customerName)}</strong></div><div class="order-contact-line"><span>SĐT:</span><strong>${escapeHTML(contactPhone)}</strong></div><div class="order-contact-line"><span>Địa chỉ:</span><strong>${escapeHTML(address)}</strong></div>`;
         const isDelivered=normalizeText(shippingStatus)==="da giao";
