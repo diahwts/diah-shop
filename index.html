@@ -67,7 +67,7 @@
     .footer-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:12px;padding:0 0 18px;text-align:center}
     .footer-link{display:grid;place-items:center;min-height:36px;padding:5px 4px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px;font-family:"Be Vietnam Pro",sans-serif;font-size:10px;font-weight:500;line-height:1.2;text-decoration:none;letter-spacing:0;transition:.18s}
     .footer-link:hover,.footer-link:focus-visible{color:#526875;text-decoration-thickness:2px}
-    .toast{position:fixed;left:50%;bottom:91px;z-index:60;width:calc(100% - 36px);max-width:390px;padding:12px 15px;color:#fff;background:var(--ink);border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transform:translate(-50%,16px);transition:.24s}.toast.show{opacity:1;transform:translate(-50%,0)}.loading{display:none;position:fixed;inset:0;z-index:80;flex-direction:column;gap:12px;justify-content:center;align-items:center;background:rgba(255,255,255,.9);color:var(--ink);backdrop-filter:blur(4px);font-size:13px}.loading.show{display:flex}.loading .loading-hint{font-size:12px;color:var(--muted);max-width:280px;text-align:center;display:none}.loading .loading-hint.show{display:block}.loading .loading-tip{font-size:12px;color:#a8768f;max-width:280px;text-align:center;display:none}.loading .loading-tip.show{display:block}.loading .loading-note{font-size:11px;font-style:italic;color:#789393;max-width:280px;text-align:center;display:none}.loading .loading-note.show{display:block}.spinner{width:34px;height:34px;border:3px solid var(--pastel);border-top-color:var(--ink);border-radius:50%;animation:spin .75s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .toast{position:fixed;left:50%;bottom:91px;z-index:60;width:calc(100% - 36px);max-width:390px;padding:12px 15px;color:#fff;background:var(--ink);border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transform:translate(-50%,16px);transition:.24s}.toast.show{opacity:1;transform:translate(-50%,0)}.loading{display:none;position:fixed;inset:0;z-index:80;flex-direction:column;gap:12px;justify-content:center;align-items:center;background:rgba(255,255,255,.9);color:var(--ink);backdrop-filter:blur(4px);font-size:13px}.loading.show{display:flex}.loading .loading-hint{font-size:12px;color:var(--muted);max-width:280px;text-align:center;display:none}.loading .loading-hint.show{display:block}.loading .loading-tip{font-size:12px;color:#a8768f;max-width:280px;text-align:center;display:none}.loading .loading-tip.show{display:block}.spinner{width:34px;height:34px;border:3px solid var(--pastel);border-top-color:var(--ink);border-radius:50%;animation:spin .75s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
     @media(max-width:380px){.form-grid{grid-template-columns:1fr}.product-grid{gap:8px}.product-card-body{padding:7px}}
     @media(max-width:300px){.cart-card{gap:8px;padding:9px}.cart-thumb{width:56px;height:56px;flex-basis:56px}.cart-meta{gap:5px}.small-stepper .stepper button{width:26px;height:26px}.small-stepper .stepper span{width:22px;height:26px;font-size:11px}}
   </style>
@@ -297,7 +297,6 @@
    <span data-template-id="loading-text" class="canva-text" style="color: rgb(16, 29, 52); font-weight: 600; font-style: normal; font-size: 15px;">Đang cập nhật sản phẩm…</span>
    <span id="loadingHint" class="loading-hint"></span>
    <span id="loadingTip" class="loading-tip"></span>
-   <span id="loadingNote" class="loading-note"></span>
   </div>
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDTpP4BjSaVRJ2i0ZWRStekdsH0Q-rFMAVD6J6aoieXeSX2hFB8eRDUHRIbdhdMOvLhw/exec";
@@ -1000,15 +999,13 @@
     function goSlide(index){slideIndex=(index+2)%2;document.getElementById("slides").style.transform=`translateX(-${slideIndex*100}%)`;document.querySelectorAll(".dot").forEach((dot,i)=>dot.classList.toggle("active",i===slideIndex))}
     function moveSlide(delta){goSlide(slideIndex+delta)}
     function showToast(message){const toast=document.getElementById("toast");toast.textContent=message;toast.classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.classList.remove("show"),3200)}
-    function setLoading(show,text,hint,tip,note){
+    function setLoading(show,text,hint,tip){
       document.getElementById("loading").classList.toggle("show",show);
       if(text)document.querySelector('[data-template-id="loading-text"]').textContent=text;
       const hintEl=document.getElementById("loadingHint");
       const tipEl=document.getElementById("loadingTip");
-      const noteEl=document.getElementById("loadingNote");
       if(hint){hintEl.textContent=hint;hintEl.classList.add("show");}else{hintEl.textContent="";hintEl.classList.remove("show");}
       if(tip){tipEl.textContent=tip;tipEl.classList.add("show");}else{tipEl.textContent="";tipEl.classList.remove("show");}
-      if(note){noteEl.textContent=note;noteEl.classList.add("show");}else{noteEl.textContent="";noteEl.classList.remove("show");}
     }
     function showFormError(message){const box=document.getElementById("formError");box.textContent=message;box.classList.add("show")}
     function clearFormError(){document.getElementById("formError").classList.remove("show")}
@@ -1174,7 +1171,7 @@
         stockPrefetch=loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1});
         return;
       }
-      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~","Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.");
+      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây. Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       // Nếu đã có bước kiểm tra tồn kho chạy ngầm từ lúc mở popup QR (xem nhánh !paymentConfirmed
       // ở trên), dùng luôn promise đó (thường đã xong hoặc gần xong) thay vì gọi lại từ đầu. Nếu
       // vì lý do nào đó chưa có (ví dụ khách vào lại trang giữa chừng), mới gọi lại như cũ.
@@ -1193,7 +1190,7 @@
       const requestSignature=JSON.stringify({items:orderItems.map(i=>`${i.id}:${i.quantity}`),phone:fields.phone,kind:checkoutKind});
       const orderId=getOrderRequestId(requestSignature);
       const order={order_id:orderId,order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
-      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~","Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.");
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây. Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       let result;
       try{
         // Cho phép thử lại 1 lần nếu timeout/mất mạng — AN TOÀN vì order_id không đổi giữa các
