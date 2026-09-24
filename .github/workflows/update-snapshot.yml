@@ -3,10 +3,12 @@ name: Cập nhật snapshot sản phẩm
 # Mục đích: lấy danh sách sản phẩm/tồn kho mới nhất từ Apps Script rồi nhúng vào index.html,
 # để khách vào web lần đầu thấy sản phẩm ngay lập tức (xem scripts/generate-snapshot.mjs).
 #
-# CHỈ CHẠY KHI BẠN TỰ BẤM (không có lịch tự động — để tránh gọi API dư thừa khi không có gì
-# thay đổi): sau khi thêm/sửa sản phẩm trong Sheet, vào tab Actions trên GitHub → chọn workflow
+# Tự động chạy mỗi 2 tiếng (đủ để đỡ quên, nhưng không gọi API dư thừa như lịch 30 phút cũ).
+# Muốn cập nhật ngay không cần đợi: vào tab Actions trên GitHub → chọn workflow
 # "Cập nhật snapshot sản phẩm" → bấm nút "Run workflow".
 on:
+  schedule:
+    - cron: "0 */2 * * *"
   workflow_dispatch: {}
 
 permissions:
