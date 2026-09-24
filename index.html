@@ -406,15 +406,16 @@
       }).filter(Boolean);
     }
 
-    async function clearProductsCache(){
-      await fetchWithRetry(`${APPS_SCRIPT_URL}?action=clearProductsCache&key=${encodeURIComponent(APP_SECRET)}&ts=${Date.now()}`,{cache:"no-store"},12000,1);
-    }
     async function loadProducts(showOverlay=false, forceRefresh=false){
       if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…","Kết nối thường mất 3 giây, có thể lâu hơn nếu mạng yếu.");
       setSyncState("loading");
       try{
-        if(forceRefresh) await clearProductsCache();
-        const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products&ts=${Date.now()}`,{cache:"no-store"},12000,2);
+        // Trước đây forceRefresh gọi 2 request TUẦN TỰ tới Apps Script (clearProductsCache rồi
+        // mới products) — mỗi request có thể bị "cold start" vài giây, cộng dồn lại rất chậm.
+        // Giờ gộp thành 1 request duy nhất: backend tự xoá cache TRƯỚC KHI đọc lại nếu thấy
+        // forceRefresh=1, nên chỉ tốn đúng 1 lượt gọi mạng.
+        const forceParam=forceRefresh ? `&forceRefresh=1&key=${encodeURIComponent(APP_SECRET)}` : "";
+        const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products${forceParam}&ts=${Date.now()}`,{cache:"no-store"},12000,2);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
         const payload=await response.json();
         if(!payload.ok || !Array.isArray(payload.products)) throw new Error(payload.error || "Dữ liệu không hợp lệ");
