@@ -350,12 +350,16 @@
     // bình thường (không forceRefresh) nên phía backend sẽ trả ngay từ cache nếu lượt trước đó đã
     // kịp lưu xong — KHÔNG đọc lại COGS từ đầu, chỉ "tiếp nối" chờ kết quả có sẵn.
     let autoRetryCount = 0, autoRetryTimer = null;
-    const AUTO_RETRY_MAX = 4; // tổng cộng thêm tối đa 4 lượt tự động, cách nhau tăng dần 4s→16s
+    const AUTO_RETRY_MAX = 4; // tổng cộng thêm tối đa 4 lượt tự động, cách nhau tăng dần 6s→24s
     function scheduleAutoRetry(){
       if(autoRetryTimer || autoRetryCount>=AUTO_RETRY_MAX) return;
       autoRetryCount++;
-      const delay=Math.min(4000*autoRetryCount,16000);
-      autoRetryTimer=setTimeout(()=>{ autoRetryTimer=null; loadProducts(false); }, delay);
+      const delay=Math.min(6000*autoRetryCount,24000);
+      // QUAN TRỌNG: retries:0 — mỗi lượt tự động chỉ gọi ĐÚNG 1 LẦN (không lồng thêm 2-3 lần thử
+      // lại bên trong fetchWithRetry nữa). Trước đây mỗi lượt tự động có thể tự nhân lên thành
+      // 3 request liên tiếp, khiến tổng số request dội vào backend TĂNG THÊM đúng lúc backend
+      // đang chậm/quá tải — góp phần làm tình hình tệ hơn thay vì đỡ hơn.
+      autoRetryTimer=setTimeout(()=>{ autoRetryTimer=null; loadProducts(false,false,{retries:0,timeoutMs:20000}); }, delay);
       setSyncState("error"); // cập nhật lại dòng trạng thái để hiện đang tự thử lại
     }
     function clearAutoRetry(){
