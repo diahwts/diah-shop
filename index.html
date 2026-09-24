@@ -1244,7 +1244,7 @@
     function friendlyOrderError_(rawError){
       const message=String(rawError || "").trim();
       if(!message) return "Không thể lưu đơn hàng vào Google Sheet. Vui lòng thử lại.";
-      if(/^Not enough stock for:/i.test(message)) return "Có sản phẩm trong giỏ hàng vừa hết hàng do khách khác đặt trước. Vui lòng cập nhật giỏ hàng.";
+      if(/^Not enough stock for:/i.test(message)) return "Có sản phẩm trong giỏ hàng lại vừa hết hàng mất rồi -.- Bạn đẹp chọn sản phẩm khác nhé >.<";
       if(/^Product not found:/i.test(message)) return "Sản phẩm trong giỏ hàng không còn tồn tại. Vui lòng tải lại trang và cập nhật giỏ hàng.";
       return message;
     }
@@ -1440,7 +1440,7 @@
       stockPrefetch=null;
       if(!stockCheckTimedOut){
         const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
-        if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm “${unavailable.album}” không còn đủ tồn kho. Vui lòng cập nhật giỏ hàng.`);reconcileCart();updateCartUI();return}
+        if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm "${unavailable.album}" lại vừa hết hàng mất rồi -.- Bạn đẹp chọn sản phẩm khác nhé >.<`);reconcileCart();updateCartUI();return}
       }
       // Nếu bước kiểm tra không kịp xong trong deadline, bỏ qua cảnh báo sớm ở trên và đi thẳng
       // xuống submit — backend sẽ là lớp chặn cuối cùng và luôn đáng tin cậy.
