@@ -348,12 +348,6 @@
     // dùng order_id này làm khoá chống trùng: nếu đơn với đúng ID này đã lưu rồi thì trả về kết
     // quả cũ thay vì tạo thêm dòng mới, nên việc thử lại luôn AN TOÀN, không lo tạo đơn trùng.
     const ORDER_REQUEST_KEY = "diah-order-request-v1";
-    // Thời gian tối thiểu (mili-giây) hiển thị màn "Đang kiểm tra tồn kho…" trước khi chuyển
-    // sang màn "Đang lưu đơn hàng…" — THUẦN HIỂN THỊ, không ảnh hưởng thời gian gọi backend thật.
-    // Cần thiết vì thường lúc submitOrder chạy tới đây, việc kiểm tra tồn kho đã prefetch xong từ
-    // trước (xem stockPrefetch/ensureStockPrefetch bên dưới) nên nếu không có mốc tối thiểu này,
-    // màn hình sẽ chuyển gần như tức thời, khiến khách không kịp thấy màn kiểm tra tồn kho.
-    const STOCK_CHECK_MIN_DISPLAY_MS = 900;
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
     // Tự động thử tải lại sản phẩm khi lần gọi CHÍNH (không phải bước kiểm tra tồn kho nền) thất
     // bại sau khi đã hết số lần thử lại bên trong fetchWithRetry — KHÔNG bắt khách phải tự bấm
@@ -395,10 +389,12 @@
       quickRetryCount=0;
       if(quickRetryTimer){ clearTimeout(quickRetryTimer); quickRetryTimer=null; }
     }
-    // Promise của lần kiểm tra tồn kho chạy ngầm — được kích hoạt SỚM nhất có thể (ngay lúc
-    // khách bấm "Thanh toán" ở Giỏ hàng, trước cả khi điền form) để tận dụng thời gian khách
-    // điền form + quét mã chuyển khoản làm bộ đệm, giúp lúc khách bấm "Đã thanh toán" hầu như
-    // không phải chờ kiểm tra lại từ đầu.
+    // Promise của lần tải sản phẩm chạy ngầm — được kích hoạt SỚM nhất có thể (ngay lúc khách
+    // bấm "Thanh toán" ở Giỏ hàng, trước cả khi điền form) để tận dụng thời gian khách điền form
+    // + quét mã chuyển khoản làm bộ đệm, giúp dữ liệu tồn kho hiển thị trong giỏ hàng (nếu có
+    // thay đổi) tương đối mới. LƯU Ý: không còn được dùng để CHẶN bước submit nữa (xem
+    // submitOrder) — server luôn tự kiểm tra lại tồn kho thật khi lưu đơn, nên việc kiểm tra
+    // trước ở đây chỉ còn là "làm ấm" dữ liệu hiển thị, không phải bước bắt buộc phải đợi xong.
     let stockPrefetch = null;
     // Cờ đánh dấu đang có 1 lượt gọi mạng dở dang — tránh bắn 2 request cùng lúc nếu khách thao
     // tác rất nhanh (vd bấm "Thanh toán" rồi bấm "Xác nhận đơn hàng" gần như ngay lập tức).
@@ -1409,41 +1405,19 @@
         ensureStockPrefetch();
         return;
       }
-      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây. Vì trang web đã thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể lâu hơn 1 chút.");
-      // Dùng lại promise kiểm tra tồn kho đã chạy ngầm từ trước (xem ensureStockPrefetch) thay vì
-      // gọi lại từ đầu. Nếu vì lý do nào đó chưa có (ví dụ khách vào lại trang giữa chừng), mới
-      // gọi mới ở đây. Vì thường lúc này prefetch đã chạy xong từ trước (gần như tức thời), cộng
-      // thêm STOCK_CHECK_MIN_DISPLAY_MS để màn "Đang kiểm tra tồn kho…" luôn hiện đủ lâu cho
-      // khách kịp đọc, thay vì thoáng qua rồi biến mất ngay sang màn "Đang lưu đơn hàng…" — thuần
-      // hiển thị, KHÔNG liên quan gì đến việc gọi backend thật.
-      // QUAN TRỌNG: stockPrefetch có thể đang "đi ké" (join) đúng lượt loadProducts đã chạy từ
-      // lúc mới vào trang — nếu lượt đó dính cold-start chậm bất thường (30-60s, xem doLoadProducts_)
-      // thì .catch/.then ở đây sẽ phải đợi ĐÚNG BẰNG THỜI GIAN ĐÓ dù đã set timeoutMs riêng, vì
-      // timeout chỉ áp dụng cho lượt gọi ĐẦU TIÊN tạo ra promise, không áp dụng lại cho lượt "ké".
-      // Trước đây còn có lỗi nặng hơn: nếu promise này REJECT (loadProducts hết retry vẫn lỗi),
-      // await Promise.all() ở ngoài không có try/catch bọc quanh => submitOrder() bị crash âm
-      // thầm, setLoading(false) KHÔNG BAO GIỜ được gọi => màn "Đang kiểm tra tồn kho…" bị KẸT
-      // VĨNH VIỄN, khách không thể bấm gì tiếp. Sửa: đặt 1 deadline cứng (không phụ thuộc promise
-      // đang "ké") + luôn nuốt lỗi (catch) — vì backend (createOrder_) LUÔN tự kiểm tra lại tồn
-      // kho khi lưu đơn (đã xác nhận), nên nếu bước kiểm tra trước ở đây không kịp xong, ta vẫn
-      // AN TOÀN khi bỏ qua và submit thẳng: nếu thật sự hết hàng, backend sẽ chặn lại và trả lỗi
-      // thân thiện (friendlyOrderError_) thay vì để khách chờ vô thời hạn.
-      const STOCK_CHECK_DEADLINE_MS = 8000;
-      let stockCheckTimedOut = false;
-      await Promise.race([
-        Promise.all([
-          (stockPrefetch || loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1})).catch(()=>{}),
-          new Promise(resolve=>setTimeout(resolve,STOCK_CHECK_MIN_DISPLAY_MS))
-        ]),
-        new Promise(resolve=>setTimeout(()=>{stockCheckTimedOut=true;resolve();},STOCK_CHECK_DEADLINE_MS))
-      ]);
-      stockPrefetch=null;
-      if(!stockCheckTimedOut){
-        const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
-        if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm "${unavailable.album}" lại vừa hết hàng mất rồi -.- Bạn đẹp chọn sản phẩm khác nhé >.<`);reconcileCart();updateCartUI();return}
-      }
-      // Nếu bước kiểm tra không kịp xong trong deadline, bỏ qua cảnh báo sớm ở trên và đi thẳng
-      // xuống submit — backend sẽ là lớp chặn cuối cùng và luôn đáng tin cậy.
+      const button=document.getElementById("placeOrderBtn");button.disabled=true;
+      // v20: BỎ HẲN bước "Đang kiểm tra tồn kho mới nhất" chặn ở đây (từng đợi stockPrefetch/
+      // loadProducts, tối đa 8s) — đây là bước kiểm tra THỨ 2, THỪA, vì backend (createOrder_)
+      // NGAY SAU ĐÂY đã tự đọc lại COGS và kiểm tra tồn kho THẬT một lần nữa rồi (bắt buộc, để
+      // đảm bảo chính xác 100% trước khi ghi đơn). Trước đây bước thừa này có 2 vấn đề: (1) tốn
+      // thêm tới 8 giây chờ TRƯỚC KHI vào bước lưu đơn thật, cộng dồn với thời gian bước lưu đơn
+      // (vốn cũng có thể chậm do hạ tầng Google) → khách chờ lâu hơn hẳn; (2) nếu khách bấm gửi
+      // rất nhanh sau khi mở form (vd dùng lại form đã lưu draft), prefetch chưa kịp chạy ngầm
+      // xong, khiến bước "thừa" này BẮT BUỘC phải gọi mạng thật, không còn "miễn phí" như kỳ
+      // vọng ban đầu. Giờ đi thẳng vào bước lưu đơn — nếu sản phẩm thật sự hết hàng, backend vẫn
+      // chặn lại và trả đúng thông báo thân thiện (friendlyOrderError_) như trước, chỉ là khách
+      // không còn phải chờ thêm 1 lượt đọc COGS THỨ 2 vô ích trước đó nữa.
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây. Vì trang web đã thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể lâu hơn 1 chút.");
       const payment="Chuyển khoản";
       const groupSubtotal=orderItems.reduce((sum,item)=>sum+Number(item.price||0)*item.quantity,0);
       const groupDiscount=checkoutKind==="ready" ? comboDiscount() : 0;
