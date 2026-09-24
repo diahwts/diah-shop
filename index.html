@@ -305,6 +305,12 @@
     // đều thấy được), nhưng chặn được phần lớn truy cập tự động từ bên ngoài trang web.
     const APP_SECRET = "diah-wts-2025-k9x2";
     let products = [], cart = [], promotions = [], selectedCategory = "all", selectedProduct = null, selectedVariant = null, checkoutKind = "ready";
+    // Theo dõi trạng thái tải sản phẩm hiện tại ("loading"/"ready"/"error") để renderProducts()
+    // biết phân biệt "đang tải lần đầu" (chưa có kết quả gì) với "đã thử tải nhưng thất bại thật
+    // sự" — trước đây cả 2 trường hợp đều hiện chung 1 câu "Không thể tải sản phẩm", khiến khách
+    // tưởng lầm trang bị lỗi ngay khi vừa mở, dù thực ra chỉ đang tải (đặc biệt rõ khi mở lần đầu/
+    // Incognito, không có dữ liệu cũ trong bộ nhớ tạm để hiện tạm trong lúc chờ).
+    let currentSyncState = "idle";
     const PRODUCT_CACHE_KEY = "diah-products-cache-v2";
     const CHECKOUT_DRAFT_KEY = "diah-checkout-draft-v1";
     // Giữ đúng 1 order_id cho cùng một lần đặt hàng qua mọi lần thử lại (tự động hoặc khách bấm
@@ -527,9 +533,10 @@
     }
 
     function setSyncState(state){
+      currentSyncState=state;
       const dot=document.getElementById("syncDot"), status=document.getElementById("syncStatus"), time=document.getElementById("syncTime");
       dot.className="sync-dot" + (state==="loading" ? " loading" : state==="error" ? " error" : "");
-      if(state==="loading"){status.textContent="Đang cập nhật sản phẩm…";time.textContent="";}
+      if(state==="loading"){status.textContent="Đang tải sản phẩm…";time.textContent="";}
       else if(state==="error"){status.textContent="Không thể tải sản phẩm";time.textContent=products.length ? "Đang hiển thị dữ liệu gần nhất" : "";}
       else {status.textContent="Sản phẩm đã cập nhật";time.textContent=lastSync ? `Lúc ${lastSync.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}` : "";}
     }
@@ -749,7 +756,7 @@
       document.getElementById("catalogTitle").textContent=categories().find(c=>c.id===selectedCategory)?.name || "Sản phẩm";
       document.getElementById("catalogCount").textContent=`${list.length} sản phẩm · ${variants.length} phân loại`;
       const grid=document.getElementById("productGrid"); grid.replaceChildren();
-      if(!list.length){const empty=document.createElement("div");empty.className="empty-products";empty.textContent=products.length ? "Chưa có sản phẩm phù hợp trong danh mục này." : "Không thể tải sản phẩm. Hãy thử làm mới dữ liệu.";grid.appendChild(empty);return;}
+      if(!list.length){const empty=document.createElement("div");empty.className="empty-products";empty.textContent=products.length ? "Chưa có sản phẩm phù hợp trong danh mục này." : (currentSyncState==="error" ? "Không thể tải sản phẩm. Hãy thử làm mới dữ liệu." : "Đang tải sản phẩm... Nếu đợi quá 15 giây hãy làm mới dữ liệu.");grid.appendChild(empty);return;}
       list.forEach(productVariants=>{
         const product=productVariants[0];
         const button=document.createElement("button");button.type="button";button.className="product-card";button.setAttribute("aria-label",`Xem ${product.album}`);
