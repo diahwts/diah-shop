@@ -2,9 +2,14 @@
 <html lang="vi"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+  <!-- v19: ĐÃ BỎ 3 thẻ <meta http-equiv="Cache-Control/Pragma/Expires"> từng ép trình duyệt
+       KHÔNG BAO GIỜ cache file HTML này — vô tình bắt khách phải tải lại toàn bộ trang (~200KB,
+       kể cả snapshot sản phẩm nhúng sẵn) MỌI LẦN vào web, kể cả vào lại ngay sau vài giây. Trên
+       mạng chậm/trình duyệt trong app (ví dụ Messenger in-app browser) việc này gây chậm rõ rệt.
+       Dữ liệu sản phẩm (phần cần luôn mới) đã tự có cơ chế riêng (fetch cache:"no-store" +
+       ts=Date.now() khi gọi API), không phụ thuộc vào cache của chính file HTML này — nên việc
+       cho phép trình duyệt cache lại HTML tĩnh (GitHub Pages đã đặt max-age=600 = 10 phút) là
+       an toàn và giúp các lần vào lại nhanh hơn nhiều. -->
   <title>Diah.wts Shop</title>
   <meta property="og:title" content="Diah.wts Shop">
   <meta property="og:description" content="Diah.wts Shop - Album, lightstick, merch chính hãng.">
