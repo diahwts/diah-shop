@@ -330,9 +330,6 @@
     // tưởng lầm trang bị lỗi ngay khi vừa mở, dù thực ra chỉ đang tải (đặc biệt rõ khi mở lần đầu/
     // Incognito, không có dữ liệu cũ trong bộ nhớ tạm để hiện tạm trong lúc chờ).
     let currentSyncState = "idle";
-    // Bật lên nếu lần tải ĐẦU TIÊN (chưa có dữ liệu để hiện tạm) kéo dài quá 15 giây — hiện thêm
-    // dòng gợi ý làm mới bên dưới khung xương, xem loadProducts()/renderProducts().
-    let showSlowLoadHint = false;
     const PRODUCT_CACHE_KEY = "diah-products-cache-v2";
     const CHECKOUT_DRAFT_KEY = "diah-checkout-draft-v1";
     // Giữ đúng 1 order_id cho cùng một lần đặt hàng qua mọi lần thử lại (tự động hoặc khách bấm
@@ -392,9 +389,16 @@
     // Gọi fetchWithTimeout và tự thử lại nếu lần đầu thất bại (mất mạng chớp nhoáng,
     // Apps Script cold start, hoặc Google trả lỗi 404/50x thoáng qua…) trước khi báo lỗi cho người dùng.
     // Thử lại cả khi có lỗi mạng lẫn khi phản hồi HTTP không thành công (ví dụ 404 tạm thời từ Apps Script).
-    async function fetchWithRetry(url, options, timeoutMs, retries){
+    // QUAN TRỌNG: hủy fetch() ở TRÌNH DUYỆT (do timeout) KHÔNG hủy được tiến trình đang chạy phía
+    // Apps Script — server vẫn tiếp tục đọc/tính toán tới khi xong. Nếu bắn NGAY 1 request mới
+    // trong lúc request cũ vẫn đang chạy dở, dễ khiến 2 lượt đọc COGS chồng lên nhau, càng làm
+    // chậm nhau hơn. Vì vậy đợi 1 khoảng ngắn trước khi thử lại — vừa đủ để lượt trước (nếu sắp
+    // xong) kịp lưu kết quả vào cache phía server, giúp lượt thử lại có cơ hội cao hơn được trả
+    // lời NGAY từ cache thay vì phải tính toán lại từ đầu.
+    async function fetchWithRetry(url, options, timeoutMs, retries, retryDelayMs=1500){
       let lastError, lastResponse;
       for(let attempt=0; attempt <= retries; attempt++){
+        if(attempt>0) await new Promise(resolve=>setTimeout(resolve,retryDelayMs));
         try{
           const response = await fetchWithTimeout(url, options, timeoutMs);
           if(response.ok) return response;
@@ -504,12 +508,6 @@
       }
       if(showOverlay && !products.length) setLoading(true,"Đang cập nhật sản phẩm…","Kết nối thường mất 3 giây, có thể lâu hơn nếu mạng yếu.");
       setSyncState("loading");
-      // Nếu đây là lần tải ĐẦU TIÊN (chưa có gì để hiện tạm) và quá 15 giây vẫn chưa xong, hiện
-      // thêm dòng gợi ý bên dưới khung xương — phòng trường hợp mạng khách quá yếu hoặc backend
-      // gặp sự cố hiếm gặp, thay vì bắt khách chờ vô thời hạn không biết chuyện gì đang xảy ra.
-      const firstLoad=!products.length;
-      if(firstLoad) showSlowLoadHint=false;
-      let slowTimer=firstLoad ? setTimeout(()=>{showSlowLoadHint=true;renderProducts();},15000) : null;
       try{
         // Trước đây forceRefresh gọi 2 request TUẦN TỰ tới Apps Script (clearProductsCache rồi
         // mới products) — mỗi request có thể bị "cold start" vài giây, cộng dồn lại rất chậm.
@@ -518,8 +516,12 @@
         const forceParam=forceRefresh ? `&forceRefresh=1&key=${encodeURIComponent(APP_SECRET)}` : "";
         // opts.timeoutMs/opts.retries cho phép gọi nơi khác (ví dụ bước kiểm tra tồn kho lúc đặt
         // hàng) rút ngắn số lần thử lại — mặc định giữ nguyên 12s x (1 lần đầu + 2 lần thử lại)
-        // cho lúc tải trang lần đầu, vì lúc đó chưa có dữ liệu cũ để hiển thị tạm.
-        const timeoutMs=opts.timeoutMs || 12000;
+        // cho lúc tải trang lần đầu, vì lúc đó chưa có dữ liệu cũ để hiển thị tạm. Tăng nhẹ từ
+        // 12s lên 15s để chịu được "cold start" của Apps Script tốt hơn — kết hợp với việc sửa
+        // lỗi cache ở backend (xem Code.gs v14) và khoảng nghỉ giữa các lần thử lại
+        // (fetchWithRetry), lần thử thứ 2 giờ có cơ hội cao hơn nhiều được trả lời gần như ngay
+        // lập tức từ cache thay vì phải đọc lại COGS từ đầu.
+        const timeoutMs=opts.timeoutMs || 15000;
         const retries=opts.retries !== undefined ? opts.retries : 2;
         const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products${forceParam}&ts=${Date.now()}`,{cache:"no-store"},timeoutMs,retries);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
@@ -540,7 +542,7 @@
       }catch(error){
         setSyncState("error");
         renderProducts();
-      }finally{ if(slowTimer) clearTimeout(slowTimer); if(showOverlay) setLoading(false); }
+      }finally{ if(showOverlay) setLoading(false); }
     }
 
     function restoreCachedProducts(){
@@ -789,13 +791,16 @@
         // thay vì chỉ 1 dòng chữ, để khách thấy "trang đang có nội dung, chỉ đang chờ ảnh/số
         // liệu" thay vì cảm giác trang trống/đứng yên.
         if(!products.length && currentSyncState!=="error"){
+          // Hiện dòng thông báo NGAY TỪ ĐẦU (không đợi đủ 15 giây) và đặt TRƯỚC 6 khung xương —
+          // khách thường không kéo xuống đọc chữ nằm phía dưới khung xương, nên phải luôn nhìn
+          // thấy được ngay không cần cuộn.
+          const hint=document.createElement("div");hint.className="empty-products";hint.style.gridColumn="1/-1";
+          hint.textContent="Đang tải sản phẩm... Nếu đợi quá 15 giây hãy làm mới dữ liệu.";
+          grid.appendChild(hint);
           for(let i=0;i<6;i++){
             const skeleton=document.createElement("div");skeleton.className="skeleton-card";
             skeleton.innerHTML=`<div class="thumb"></div><div class="product-card-body"><div class="skeleton-bar w40"></div><div class="skeleton-bar w90"></div><div class="skeleton-bar w60"></div><div class="skeleton-bar w50"></div></div>`;
             grid.appendChild(skeleton);
-          }
-          if(showSlowLoadHint){
-            const hint=document.createElement("div");hint.className="empty-products";hint.textContent="Đang tải sản phẩm... Nếu đợi quá 15 giây hãy làm mới dữ liệu.";grid.appendChild(hint);
           }
           return;
         }
