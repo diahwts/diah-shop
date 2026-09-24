@@ -313,9 +313,21 @@
     // quả cũ thay vì tạo thêm dòng mới, nên việc thử lại luôn AN TOÀN, không lo tạo đơn trùng.
     const ORDER_REQUEST_KEY = "diah-order-request-v1";
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
-    // Promise của lần kiểm tra tồn kho chạy ngầm khi popup QR chuyển khoản vừa mở (xem
-    // submitOrder) — giúp lúc khách bấm "Đã thanh toán" không phải chờ kiểm tra lại từ đầu.
+    // Promise của lần kiểm tra tồn kho chạy ngầm — được kích hoạt SỚM nhất có thể (ngay lúc
+    // khách bấm "Thanh toán" ở Giỏ hàng, trước cả khi điền form) để tận dụng thời gian khách
+    // điền form + quét mã chuyển khoản làm bộ đệm, giúp lúc khách bấm "Đã thanh toán" hầu như
+    // không phải chờ kiểm tra lại từ đầu.
     let stockPrefetch = null;
+    // Cờ đánh dấu đang có 1 lượt gọi mạng dở dang — tránh bắn 2 request cùng lúc nếu khách thao
+    // tác rất nhanh (vd bấm "Thanh toán" rồi bấm "Xác nhận đơn hàng" gần như ngay lập tức).
+    let stockPrefetchInFlight = false;
+    // Gọi ở nhiều thời điểm khác nhau trong luồng đặt hàng (xem các lời gọi bên dưới): an toàn
+    // gọi lặp lại vì loadProducts tự bỏ qua việc gọi mạng nếu dữ liệu vẫn còn mới (opts.maxAgeMs).
+    function ensureStockPrefetch(){
+      if(stockPrefetchInFlight) return;
+      stockPrefetchInFlight=true;
+      stockPrefetch=loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1}).finally(()=>{stockPrefetchInFlight=false});
+    }
     let currentOrders = [], currentOrdersPhone = "", paymentContext = {mode:"checkout"};
 
     // Trả về order_id đã dùng cho lần đặt hàng gần nhất nếu "signature" (sản phẩm + số lượng +
@@ -980,6 +992,9 @@
         checkoutKind=kind || (cart.some(item=>item.preorder) && !cart.some(item=>!item.preorder) ? "preorder" : "ready");
         const missing=missingBundleRequirements();
         if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
+        // Bắt đầu kiểm tra tồn kho chạy ngầm NGAY LÚC NÀY (trước cả khi khách điền form), tận
+        // dụng thời gian điền form + quét mã chuyển khoản làm bộ đệm — xem ensureStockPrefetch().
+        ensureStockPrefetch();
       }
       document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
       const targetView=document.getElementById(view+"View");
@@ -1163,18 +1178,17 @@
       if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
       if(!paymentConfirmed){
         updatePaymentModalInfo();document.getElementById("paymentModal").classList.add("show");
-        // Bắt đầu kiểm tra tồn kho NGAY LÚC NÀY, chạy ngầm không hiện overlay, trong lúc khách
-        // thao tác chuyển khoản ở popup QR (thường mất ít nhất vài chục giây) — để lúc khách
-        // bấm "Đã thanh toán", việc kiểm tra gần như đã xong, không phải chờ lại từ đầu. Vẫn
-        // hiện đủ 2 màn hình chờ như cũ (xem bên dưới), chỉ là thời điểm CHẠY NGẦM được dời sớm
-        // hơn. An toàn vì backend (createOrder_) vẫn kiểm tra lại tồn kho lần cuối khi ghi đơn.
-        stockPrefetch=loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1});
+        // Thường lúc này đã có sẵn (hoặc đang chạy dở) bước kiểm tra tồn kho từ lúc khách bấm
+        // "Thanh toán" ở Giỏ hàng (xem showView). Gọi lại đây chỉ để đảm bảo có prefetch chạy
+        // ngầm trong lúc khách thao tác chuyển khoản, phòng trường hợp dữ liệu đã cũ (khách điền
+        // form lâu) — ensureStockPrefetch() tự bỏ qua nếu đang có 1 lượt gọi dở dang.
+        ensureStockPrefetch();
         return;
       }
       const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây. Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
-      // Nếu đã có bước kiểm tra tồn kho chạy ngầm từ lúc mở popup QR (xem nhánh !paymentConfirmed
-      // ở trên), dùng luôn promise đó (thường đã xong hoặc gần xong) thay vì gọi lại từ đầu. Nếu
-      // vì lý do nào đó chưa có (ví dụ khách vào lại trang giữa chừng), mới gọi lại như cũ.
+      // Dùng lại promise kiểm tra tồn kho đã chạy ngầm từ trước (xem ensureStockPrefetch) thay vì
+      // gọi lại từ đầu. Nếu vì lý do nào đó chưa có (ví dụ khách vào lại trang giữa chừng), mới
+      // gọi mới ở đây.
       await (stockPrefetch || loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1}));
       stockPrefetch=null;
       const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
