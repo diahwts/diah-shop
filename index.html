@@ -1416,13 +1416,34 @@
       // thêm STOCK_CHECK_MIN_DISPLAY_MS để màn "Đang kiểm tra tồn kho…" luôn hiện đủ lâu cho
       // khách kịp đọc, thay vì thoáng qua rồi biến mất ngay sang màn "Đang lưu đơn hàng…" — thuần
       // hiển thị, KHÔNG liên quan gì đến việc gọi backend thật.
-      await Promise.all([
-        stockPrefetch || loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1}),
-        new Promise(resolve=>setTimeout(resolve,STOCK_CHECK_MIN_DISPLAY_MS))
+      // QUAN TRỌNG: stockPrefetch có thể đang "đi ké" (join) đúng lượt loadProducts đã chạy từ
+      // lúc mới vào trang — nếu lượt đó dính cold-start chậm bất thường (30-60s, xem doLoadProducts_)
+      // thì .catch/.then ở đây sẽ phải đợi ĐÚNG BẰNG THỜI GIAN ĐÓ dù đã set timeoutMs riêng, vì
+      // timeout chỉ áp dụng cho lượt gọi ĐẦU TIÊN tạo ra promise, không áp dụng lại cho lượt "ké".
+      // Trước đây còn có lỗi nặng hơn: nếu promise này REJECT (loadProducts hết retry vẫn lỗi),
+      // await Promise.all() ở ngoài không có try/catch bọc quanh => submitOrder() bị crash âm
+      // thầm, setLoading(false) KHÔNG BAO GIỜ được gọi => màn "Đang kiểm tra tồn kho…" bị KẸT
+      // VĨNH VIỄN, khách không thể bấm gì tiếp. Sửa: đặt 1 deadline cứng (không phụ thuộc promise
+      // đang "ké") + luôn nuốt lỗi (catch) — vì backend (createOrder_) LUÔN tự kiểm tra lại tồn
+      // kho khi lưu đơn (đã xác nhận), nên nếu bước kiểm tra trước ở đây không kịp xong, ta vẫn
+      // AN TOÀN khi bỏ qua và submit thẳng: nếu thật sự hết hàng, backend sẽ chặn lại và trả lỗi
+      // thân thiện (friendlyOrderError_) thay vì để khách chờ vô thời hạn.
+      const STOCK_CHECK_DEADLINE_MS = 8000;
+      let stockCheckTimedOut = false;
+      await Promise.race([
+        Promise.all([
+          (stockPrefetch || loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1})).catch(()=>{}),
+          new Promise(resolve=>setTimeout(resolve,STOCK_CHECK_MIN_DISPLAY_MS))
+        ]),
+        new Promise(resolve=>setTimeout(()=>{stockCheckTimedOut=true;resolve();},STOCK_CHECK_DEADLINE_MS))
       ]);
       stockPrefetch=null;
-      const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
-      if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm “${unavailable.album}” không còn đủ tồn kho. Vui lòng cập nhật giỏ hàng.`);reconcileCart();updateCartUI();return}
+      if(!stockCheckTimedOut){
+        const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
+        if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm “${unavailable.album}” không còn đủ tồn kho. Vui lòng cập nhật giỏ hàng.`);reconcileCart();updateCartUI();return}
+      }
+      // Nếu bước kiểm tra không kịp xong trong deadline, bỏ qua cảnh báo sớm ở trên và đi thẳng
+      // xuống submit — backend sẽ là lớp chặn cuối cùng và luôn đáng tin cậy.
       const payment="Chuyển khoản";
       const groupSubtotal=orderItems.reduce((sum,item)=>sum+Number(item.price||0)*item.quantity,0);
       const groupDiscount=checkoutKind==="ready" ? comboDiscount() : 0;
