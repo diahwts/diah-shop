@@ -1418,7 +1418,14 @@
       // hạn tối đa 8s) TRƯỚC KHI bắn request lưu đơn thật, để tránh 2 request cùng chạy song
       // song. Luôn nuốt lỗi (catch) + có deadline cứng, nên KHÔNG có nguy cơ bị kẹt vô thời hạn
       // như lỗi từng gặp ở v18.
-      const STOCK_PREFETCH_SETTLE_DEADLINE_MS = 8000;
+      // v24: RÚT NGẮN từ 8000ms xuống 2500ms — Executions log phía Code.gs (sau khi bỏ flush() +
+      // thêm trigger keep-warm) cho thấy action=products giờ THƯỜNG XONG chỉ trong 0.3-1.7s, hiếm
+      // khi cần tới 8s như lúc trước (khi container còn hay "cold start"/COGS còn bị flush() làm
+      // chậm). Giữ nguyên 8s làm mức trần "an toàn" giờ chỉ khiến MỌI đơn hàng đều phải chờ thêm
+      // oan uổng dù prefetch thường đã xong từ lâu. Vẫn còn deadline (không chờ vô thời hạn) để
+      // phòng đúng lúc mạng/COGS chậm bất thường — chỉ khi đó khách mới thấy chờ hơi lâu hơn 1
+      // chút (POST vẫn được gửi ngay sau 2.5s, không phải chờ hết 8s như trước).
+      const STOCK_PREFETCH_SETTLE_DEADLINE_MS = 2500;
       await Promise.race([
         (stockPrefetch || Promise.resolve()).catch(()=>{}),
         new Promise(resolve=>setTimeout(resolve,STOCK_PREFETCH_SETTLE_DEADLINE_MS))
