@@ -359,7 +359,7 @@
       // lại bên trong fetchWithRetry nữa). Trước đây mỗi lượt tự động có thể tự nhân lên thành
       // 3 request liên tiếp, khiến tổng số request dội vào backend TĂNG THÊM đúng lúc backend
       // đang chậm/quá tải — góp phần làm tình hình tệ hơn thay vì đỡ hơn.
-      autoRetryTimer=setTimeout(()=>{ autoRetryTimer=null; loadProducts(false,false,{retries:0,timeoutMs:20000}); }, delay);
+      autoRetryTimer=setTimeout(()=>{ autoRetryTimer=null; loadProducts(false,false,{retries:0,timeoutMs:35000}); }, delay);
       setSyncState("error"); // cập nhật lại dòng trạng thái để hiện đang tự thử lại
     }
     function clearAutoRetry(){
@@ -378,7 +378,7 @@
       if(quickRetryTimer) return;
       if(quickRetryCount>=QUICK_RETRY_MAX){ quickRetryCount=0; scheduleAutoRetry(); return; }
       quickRetryCount++;
-      quickRetryTimer=setTimeout(()=>{ quickRetryTimer=null; loadProducts(false,false,{retries:0,timeoutMs:20000}); }, 1200);
+      quickRetryTimer=setTimeout(()=>{ quickRetryTimer=null; loadProducts(false,false,{retries:0,timeoutMs:35000}); }, 1200);
     }
     function clearQuickRetry(){
       quickRetryCount=0;
@@ -590,8 +590,18 @@
         // lỗi cache ở backend (xem Code.gs v14) và khoảng nghỉ giữa các lần thử lại
         // (fetchWithRetry), lần thử thứ 2 giờ có cơ hội cao hơn nhiều được trả lời gần như ngay
         // lập tức từ cache thay vì phải đọc lại COGS từ đầu.
-        const timeoutMs=opts.timeoutMs || 15000;
-        const retries=opts.retries !== undefined ? opts.retries : 2;
+        // v18: đo trực tiếp backend nhiều lần liên tục cho thấy ĐỘ TRỄ RẤT THẤT THƯỜNG — phần lớn
+        // 1.5-4s, nhưng thỉnh thoảng (không đoán trước được lúc nào, nhiều khả năng do hạ tầng
+        // Google Apps Script/Sheets, KHÔNG phải do code) lên tới 30+ giây. Timeout cũ (15s) ngắn
+        // hơn những lần chậm này, khiến trình duyệt tự huỷ (AbortController) rồi gọi lại — nhưng
+        // huỷ ở TRÌNH DUYỆT không huỷ được tiến trình đang chạy PHÍA SERVER, nên request cũ vẫn
+        // giữ cờ khoá PRODUCT_READING_KEY, khiến request gọi lại gặp ngay {retry:true}, dồn thêm
+        // thời gian — đúng hiện tượng "càng thử lại càng không tải được". Tăng timeout lên 35s để
+        // CHỜ HẾT những lần chậm bất thường này thay vì huỷ ngang, và giảm số lần tự thử lại BÊN
+        // TRONG fetchWithRetry (2→1) — vì giờ mỗi lần thử đã đợi lâu hơn nhiều, thử lại nhiều lần
+        // nữa chỉ càng kéo dài tổng thời gian khách phải chờ mà không giúp gì thêm.
+        const timeoutMs=opts.timeoutMs || 35000;
+        const retries=opts.retries !== undefined ? opts.retries : 1;
         const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products${forceParam}&ts=${Date.now()}`,{cache:"no-store"},timeoutMs,retries);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
         const payload=await response.json();
