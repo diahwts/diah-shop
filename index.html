@@ -344,6 +344,24 @@
     // màn hình sẽ chuyển gần như tức thời, khiến khách không kịp thấy màn kiểm tra tồn kho.
     const STOCK_CHECK_MIN_DISPLAY_MS = 900;
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
+    // Tự động thử tải lại sản phẩm khi lần gọi CHÍNH (không phải bước kiểm tra tồn kho nền) thất
+    // bại sau khi đã hết số lần thử lại bên trong fetchWithRetry — KHÔNG bắt khách phải tự bấm
+    // nút "làm mới dữ liệu" mới có lượt gọi tiếp theo. Mỗi lượt tự động này vẫn gọi action=products
+    // bình thường (không forceRefresh) nên phía backend sẽ trả ngay từ cache nếu lượt trước đó đã
+    // kịp lưu xong — KHÔNG đọc lại COGS từ đầu, chỉ "tiếp nối" chờ kết quả có sẵn.
+    let autoRetryCount = 0, autoRetryTimer = null;
+    const AUTO_RETRY_MAX = 4; // tổng cộng thêm tối đa 4 lượt tự động, cách nhau tăng dần 4s→16s
+    function scheduleAutoRetry(){
+      if(autoRetryTimer || autoRetryCount>=AUTO_RETRY_MAX) return;
+      autoRetryCount++;
+      const delay=Math.min(4000*autoRetryCount,16000);
+      autoRetryTimer=setTimeout(()=>{ autoRetryTimer=null; loadProducts(false); }, delay);
+      setSyncState("error"); // cập nhật lại dòng trạng thái để hiện đang tự thử lại
+    }
+    function clearAutoRetry(){
+      autoRetryCount=0;
+      if(autoRetryTimer){ clearTimeout(autoRetryTimer); autoRetryTimer=null; }
+    }
     // Promise của lần kiểm tra tồn kho chạy ngầm — được kích hoạt SỚM nhất có thể (ngay lúc
     // khách bấm "Thanh toán" ở Giỏ hàng, trước cả khi điền form) để tận dụng thời gian khách
     // điền form + quét mã chuyển khoản làm bộ đệm, giúp lúc khách bấm "Đã thanh toán" hầu như
@@ -539,9 +557,14 @@
         reconcileCart();
         renderCategories(); renderProducts(); updateCartUI();
         setSyncState("ready");
+        clearAutoRetry();
       }catch(error){
         setSyncState("error");
         renderProducts();
+        // Chỉ tự động thử lại cho lượt gọi CHÍNH (tải trang lần đầu / bấm làm mới) — bỏ qua các
+        // lượt "kiểm tra tồn kho nền" (luôn có opts.maxAgeMs) để tránh tự nhân bản request ở
+        // những chỗ vốn đã có cơ chế gọi lại riêng (ensureStockPrefetch).
+        if(!opts.maxAgeMs) scheduleAutoRetry();
       }finally{ if(showOverlay) setLoading(false); }
     }
 
@@ -567,10 +590,15 @@
       const dot=document.getElementById("syncDot"), status=document.getElementById("syncStatus"), time=document.getElementById("syncTime");
       dot.className="sync-dot" + (state==="loading" ? " loading" : state==="error" ? " error" : "");
       if(state==="loading"){status.textContent="Đang tải sản phẩm…";time.textContent="";}
-      else if(state==="error"){status.textContent="Không thể tải sản phẩm";time.textContent=products.length ? "Đang hiển thị dữ liệu gần nhất" : "";}
+      else if(state==="error"){
+        // Khi vẫn còn lượt tự động thử lại (autoRetryTimer đang chờ chạy), báo cho khách biết
+        // trang đang TỰ nó thử lại chứ không phải đứng yên chờ khách bấm nút.
+        status.textContent = autoRetryTimer ? "Không thể tải sản phẩm — đang tự thử lại…" : "Không thể tải sản phẩm";
+        time.textContent = products.length ? "Đang hiển thị dữ liệu gần nhất" : (autoRetryTimer ? "" : "Hãy bấm làm mới dữ liệu");
+      }
       else {status.textContent="Sản phẩm đã cập nhật";time.textContent=lastSync ? `Lúc ${lastSync.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}` : "";}
     }
-    function refreshProducts(){ loadProducts(true,true); }
+    function refreshProducts(){ clearAutoRetry(); loadProducts(true,true); }
     function normalizeText(value){return String(value || "").trim().toLowerCase().replace(/đ/g,"d").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ")}
     function parseBannerTexts(raw){
       const text=String(raw || "");
@@ -804,7 +832,11 @@
           }
           return;
         }
-        const empty=document.createElement("div");empty.className="empty-products";empty.textContent=products.length ? "Chưa có sản phẩm phù hợp trong danh mục này." : "Không thể tải sản phẩm. Hãy thử làm mới dữ liệu.";grid.appendChild(empty);return;
+        const empty=document.createElement("div");empty.className="empty-products";
+        empty.textContent = products.length
+          ? "Chưa có sản phẩm phù hợp trong danh mục này."
+          : (autoRetryTimer ? "Không thể tải sản phẩm. Đang tự động thử lại..." : "Không thể tải sản phẩm. Hãy thử làm mới dữ liệu.");
+        grid.appendChild(empty);return;
       }
       list.forEach(productVariants=>{
         const product=productVariants[0];
