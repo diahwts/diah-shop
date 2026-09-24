@@ -583,13 +583,6 @@
         // Giờ gộp thành 1 request duy nhất: backend tự xoá cache TRƯỚC KHI đọc lại nếu thấy
         // forceRefresh=1, nên chỉ tốn đúng 1 lượt gọi mạng.
         const forceParam=forceRefresh ? `&forceRefresh=1&key=${encodeURIComponent(APP_SECRET)}` : "";
-        // opts.timeoutMs/opts.retries cho phép gọi nơi khác (ví dụ bước kiểm tra tồn kho lúc đặt
-        // hàng) rút ngắn số lần thử lại — mặc định giữ nguyên 12s x (1 lần đầu + 2 lần thử lại)
-        // cho lúc tải trang lần đầu, vì lúc đó chưa có dữ liệu cũ để hiển thị tạm. Tăng nhẹ từ
-        // 12s lên 15s để chịu được "cold start" của Apps Script tốt hơn — kết hợp với việc sửa
-        // lỗi cache ở backend (xem Code.gs v14) và khoảng nghỉ giữa các lần thử lại
-        // (fetchWithRetry), lần thử thứ 2 giờ có cơ hội cao hơn nhiều được trả lời gần như ngay
-        // lập tức từ cache thay vì phải đọc lại COGS từ đầu.
         // v18: đo trực tiếp backend nhiều lần liên tục cho thấy ĐỘ TRỄ RẤT THẤT THƯỜNG — phần lớn
         // 1.5-4s, nhưng thỉnh thoảng (không đoán trước được lúc nào, nhiều khả năng do hạ tầng
         // Google Apps Script/Sheets, KHÔNG phải do code) lên tới 30+ giây. Timeout cũ (15s) ngắn
@@ -597,11 +590,17 @@
         // huỷ ở TRÌNH DUYỆT không huỷ được tiến trình đang chạy PHÍA SERVER, nên request cũ vẫn
         // giữ cờ khoá PRODUCT_READING_KEY, khiến request gọi lại gặp ngay {retry:true}, dồn thêm
         // thời gian — đúng hiện tượng "càng thử lại càng không tải được". Tăng timeout lên 35s để
-        // CHỜ HẾT những lần chậm bất thường này thay vì huỷ ngang, và giảm số lần tự thử lại BÊN
-        // TRONG fetchWithRetry (2→1) — vì giờ mỗi lần thử đã đợi lâu hơn nhiều, thử lại nhiều lần
-        // nữa chỉ càng kéo dài tổng thời gian khách phải chờ mà không giúp gì thêm.
+        // CHỜ HẾT những lần chậm bất thường này thay vì huỷ ngang.
+        // PHÁT HIỆN THÊM cùng lúc: đôi khi script.google.com trả về thẳng lỗi HTTP 404 kèm 1
+        // TRANG LỖI CHUNG CỦA GOOGLE — xảy ra ở TẦNG HẠ TẦNG, TRƯỚC KHI code Code.gs kịp chạy (đo
+        // được có lúc 3 lần liên tiếp đều 404, lần thứ 4 mới thành công) — hoàn toàn không phải
+        // lỗi do "code viết nhiều/logic combo" mà do chính dịch vụ của Google occasionally trả
+        // lỗi tạm thời cho web app. Mỗi lần 404 này trả lời GẦN NHƯ NGAY (không tốn thời gian chờ
+        // timeout), nên tăng lại số lần tự thử lại BÊN TRONG fetchWithRetry (1→3) để chịu được
+        // vài lần 404 liên tiếp mà KHÔNG làm tăng đáng kể tổng thời gian chờ (vì các lần 404 gần
+        // như tức thời, không giống các lần chờ hết 35s do đọc COGS chậm thật sự).
         const timeoutMs=opts.timeoutMs || 35000;
-        const retries=opts.retries !== undefined ? opts.retries : 1;
+        const retries=opts.retries !== undefined ? opts.retries : 3;
         const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products${forceParam}&ts=${Date.now()}`,{cache:"no-store"},timeoutMs,retries);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
         const payload=await response.json();
