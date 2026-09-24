@@ -366,6 +366,24 @@
       autoRetryCount=0;
       if(autoRetryTimer){ clearTimeout(autoRetryTimer); autoRetryTimer=null; }
     }
+    // Khi backend trả về {retry:true} (nghĩa là: có 1 khách khác đang đọc COGS, server CHỦ ĐỘNG
+    // trả lời ngay lập tức thay vì bắt trình duyệt chờ — xem Code.gs v16), đây KHÔNG PHẢI lỗi
+    // thật, chỉ là "chưa tới lượt". Thử lại rất nhanh (1.2s) và KHÔNG đổi trạng thái sang "error"
+    // (giữ nguyên "loading" để khách vẫn thấy dòng "Đang tải sản phẩm..." thay vì bị hiểu lầm là
+    // đã thất bại) — khác hẳn scheduleAutoRetry (dành cho lỗi thật/mất mạng, cần lùi thời gian
+    // dài hơn để tránh dội thêm tải lên server đang gặp vấn đề thật sự.
+    let quickRetryTimer = null, quickRetryCount = 0;
+    const QUICK_RETRY_MAX = 8; // tối đa ~10 giây tự thử nhanh trước khi rơi xuống scheduleAutoRetry
+    function scheduleQuickRetry(){
+      if(quickRetryTimer) return;
+      if(quickRetryCount>=QUICK_RETRY_MAX){ quickRetryCount=0; scheduleAutoRetry(); return; }
+      quickRetryCount++;
+      quickRetryTimer=setTimeout(()=>{ quickRetryTimer=null; loadProducts(false,false,{retries:0,timeoutMs:20000}); }, 1200);
+    }
+    function clearQuickRetry(){
+      quickRetryCount=0;
+      if(quickRetryTimer){ clearTimeout(quickRetryTimer); quickRetryTimer=null; }
+    }
     // Promise của lần kiểm tra tồn kho chạy ngầm — được kích hoạt SỚM nhất có thể (ngay lúc
     // khách bấm "Thanh toán" ở Giỏ hàng, trước cả khi điền form) để tận dụng thời gian khách
     // điền form + quét mã chuyển khoản làm bộ đệm, giúp lúc khách bấm "Đã thanh toán" hầu như
@@ -548,6 +566,14 @@
         const response=await fetchWithRetry(`${APPS_SCRIPT_URL}?action=products${forceParam}&ts=${Date.now()}`,{cache:"no-store"},timeoutMs,retries);
         if(!response.ok) throw new Error("Không thể tải dữ liệu");
         const payload=await response.json();
+        // Tín hiệu {retry:true}: server đang bận trả lời 1 khách khác đọc COGS, KHÔNG PHẢI lỗi
+        // thật (xem Code.gs v16) — thử lại rất nhanh, giữ nguyên trạng thái "loading" (không
+        // hiện chữ lỗi khiến khách hoang mang), và không dùng nhánh scheduleAutoRetry (dành
+        // riêng cho lỗi thật, lùi thời gian dài hơn).
+        if(payload && payload.retry){
+          if(!opts.maxAgeMs) scheduleQuickRetry();
+          return;
+        }
         if(!payload.ok || !Array.isArray(payload.products)) throw new Error(payload.error || "Dữ liệu không hợp lệ");
         const fresh=normalizeProducts(payload.products);
         if(!fresh.length) throw new Error("Không tìm thấy sản phẩm hợp lệ");
@@ -562,6 +588,7 @@
         renderCategories(); renderProducts(); updateCartUI();
         setSyncState("ready");
         clearAutoRetry();
+        clearQuickRetry();
       }catch(error){
         setSyncState("error");
         renderProducts();
@@ -602,7 +629,7 @@
       }
       else {status.textContent="Sản phẩm đã cập nhật";time.textContent=lastSync ? `Lúc ${lastSync.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}` : "";}
     }
-    function refreshProducts(){ clearAutoRetry(); loadProducts(true,true); }
+    function refreshProducts(){ clearAutoRetry(); clearQuickRetry(); loadProducts(true,true); }
     function normalizeText(value){return String(value || "").trim().toLowerCase().replace(/đ/g,"d").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ")}
     function parseBannerTexts(raw){
       const text=String(raw || "");
