@@ -1406,18 +1406,28 @@
         return;
       }
       const button=document.getElementById("placeOrderBtn");button.disabled=true;
-      // v20: BỎ HẲN bước "Đang kiểm tra tồn kho mới nhất" chặn ở đây (từng đợi stockPrefetch/
-      // loadProducts, tối đa 8s) — đây là bước kiểm tra THỨ 2, THỪA, vì backend (createOrder_)
-      // NGAY SAU ĐÂY đã tự đọc lại COGS và kiểm tra tồn kho THẬT một lần nữa rồi (bắt buộc, để
-      // đảm bảo chính xác 100% trước khi ghi đơn). Trước đây bước thừa này có 2 vấn đề: (1) tốn
-      // thêm tới 8 giây chờ TRƯỚC KHI vào bước lưu đơn thật, cộng dồn với thời gian bước lưu đơn
-      // (vốn cũng có thể chậm do hạ tầng Google) → khách chờ lâu hơn hẳn; (2) nếu khách bấm gửi
-      // rất nhanh sau khi mở form (vd dùng lại form đã lưu draft), prefetch chưa kịp chạy ngầm
-      // xong, khiến bước "thừa" này BẮT BUỘC phải gọi mạng thật, không còn "miễn phí" như kỳ
-      // vọng ban đầu. Giờ đi thẳng vào bước lưu đơn — nếu sản phẩm thật sự hết hàng, backend vẫn
-      // chặn lại và trả đúng thông báo thân thiện (friendlyOrderError_) như trước, chỉ là khách
-      // không còn phải chờ thêm 1 lượt đọc COGS THỨ 2 vô ích trước đó nữa.
       setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây. Vì trang web đã thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể lâu hơn 1 chút.");
+      // v21: SUY NGHĨ LẠI v20 — bỏ HOÀN TOÀN việc chờ stockPrefetch trước khi gọi createOrder đã
+      // khiến 2 request cùng lúc bắn vào Apps Script GẦN NHƯ ĐỒNG THỜI mỗi khi khách bấm gửi
+      // ngay lúc prefetch (action=products, chạy ngầm từ lúc mở checkout) VẪN ĐANG ĐỌC COGS dở
+      // dang: 1 GET (action=products, đang chạy) + 1 POST (action=createOrder, cũng tự đọc lại
+      // COGS) tranh nhau tài nguyên thực thi của CÙNG 1 Apps Script project — thay vì chạy TUẦN
+      // TỰ như trước, khiến tổng thời gian THỰC TẾ còn chậm hơn cả lúc chưa bỏ bước kiểm tra.
+      // Sửa lại: vẫn giữ đúng 1 MÀN HÌNH DUY NHẤT "Đang lưu đơn hàng…" (không hiện lại màn
+      // "Đang kiểm tra tồn kho" riêng như v19) — nhưng NGẦM đợi prefetch ổn định (xong hoặc hết
+      // hạn tối đa 8s) TRƯỚC KHI bắn request lưu đơn thật, để tránh 2 request cùng chạy song
+      // song. Luôn nuốt lỗi (catch) + có deadline cứng, nên KHÔNG có nguy cơ bị kẹt vô thời hạn
+      // như lỗi từng gặp ở v18.
+      const STOCK_PREFETCH_SETTLE_DEADLINE_MS = 8000;
+      await Promise.race([
+        (stockPrefetch || Promise.resolve()).catch(()=>{}),
+        new Promise(resolve=>setTimeout(resolve,STOCK_PREFETCH_SETTLE_DEADLINE_MS))
+      ]);
+      // Nếu prefetch kịp settle, tận dụng luôn dữ liệu vừa có (không tốn thêm request nào) để
+      // báo "hết hàng" sớm nếu phát hiện được — vẫn chỉ là cảnh báo TIỆN, backend vẫn luôn là
+      // lớp kiểm tra chính thức/bắt buộc bên dưới dù nhánh này có chạy hay không.
+      const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
+      if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm "${unavailable.album}" lại vừa hết hàng mất rồi -.- Bạn đẹp chọn sản phẩm khác nhé >.<`);reconcileCart();updateCartUI();return}
       const payment="Chuyển khoản";
       const groupSubtotal=orderItems.reduce((sum,item)=>sum+Number(item.price||0)*item.quantity,0);
       const groupDiscount=checkoutKind==="ready" ? comboDiscount() : 0;
