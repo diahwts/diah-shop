@@ -1226,6 +1226,17 @@
     }
     function showFormError(message){const box=document.getElementById("formError");box.textContent=message;box.classList.add("show")}
     function clearFormError(){document.getElementById("formError").classList.remove("show")}
+    // Phòng trường hợp bản Code.gs đang chạy trên server CHƯA được cập nhật bản mới (ném lỗi kỹ
+    // thuật thô bằng tiếng Anh kèm mã sản phẩm, ví dụ "Not enough stock for: 123456"/"Product not
+    // found: 123456") — dịch lại thành thông điệp thân thiện tiếng Việt trước khi hiện cho khách,
+    // để khách không hiểu nhầm là web bị lỗi/bug thay vì đơn giản là "vừa hết hàng".
+    function friendlyOrderError_(rawError){
+      const message=String(rawError || "").trim();
+      if(!message) return "Không thể lưu đơn hàng vào Google Sheet. Vui lòng thử lại.";
+      if(/^Not enough stock for:/i.test(message)) return "Có sản phẩm trong giỏ hàng vừa hết hàng do khách khác đặt trước. Vui lòng cập nhật giỏ hàng.";
+      if(/^Product not found:/i.test(message)) return "Sản phẩm trong giỏ hàng không còn tồn tại. Vui lòng tải lại trang và cập nhật giỏ hàng.";
+      return message;
+    }
     function closeNoteModal(){document.getElementById("noteModal").classList.remove("show")}
     function updatePaymentModalInfo(){
       const total=document.getElementById("totalAmount");
@@ -1435,7 +1446,7 @@
         if(alreadySaved) result={ok:true,order_id:orderId,combo_discount:groupDiscount};
       }
       setLoading(false);button.disabled=false;
-      if(!result.ok){showFormError(result.error || "Không thể lưu đơn hàng vào Google Sheet. Vui lòng thử lại.");return}
+      if(!result.ok){showFormError(friendlyOrderError_(result.error));return}
       order.combo_discount=result.combo_discount || 0;
       clearOrderRequestId();
       lastOrder=order;clearCheckoutDraft();cart=cart.filter(item=>checkoutKind==="preorder" ? !item.preorder : item.preorder);updateCartUI();renderConfirmation();showView("confirm");
