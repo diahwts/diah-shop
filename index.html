@@ -1191,7 +1191,7 @@
         ensureStockPrefetch();
         return;
       }
-      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây. Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
+      const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây. Vì trang web đã thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể lâu hơn 1 chút.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       // Dùng lại promise kiểm tra tồn kho đã chạy ngầm từ trước (xem ensureStockPrefetch) thay vì
       // gọi lại từ đầu. Nếu vì lý do nào đó chưa có (ví dụ khách vào lại trang giữa chừng), mới
       // gọi mới ở đây. Vì thường lúc này prefetch đã chạy xong từ trước (gần như tức thời), cộng
@@ -1216,7 +1216,7 @@
       const requestSignature=JSON.stringify({items:orderItems.map(i=>`${i.id}:${i.quantity}`),phone:fields.phone,kind:checkoutKind});
       const orderId=getOrderRequestId(requestSignature);
       const order={order_id:orderId,order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
-      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây. Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây. Vì trang web đã thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể lâu hơn 1 chút.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       let result;
       try{
         // Cho phép thử lại 1 lần nếu timeout/mất mạng — AN TOÀN vì order_id không đổi giữa các
