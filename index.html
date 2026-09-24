@@ -307,8 +307,29 @@
     let products = [], cart = [], promotions = [], selectedCategory = "all", selectedProduct = null, selectedVariant = null, checkoutKind = "ready";
     const PRODUCT_CACHE_KEY = "diah-products-cache-v2";
     const CHECKOUT_DRAFT_KEY = "diah-checkout-draft-v1";
+    // Giữ đúng 1 order_id cho cùng một lần đặt hàng qua mọi lần thử lại (tự động hoặc khách bấm
+    // "Xác nhận đơn hàng" lại tay sau khi thấy lỗi) — kể cả khi khách lỡ tải lại trang. Backend
+    // dùng order_id này làm khoá chống trùng: nếu đơn với đúng ID này đã lưu rồi thì trả về kết
+    // quả cũ thay vì tạo thêm dòng mới, nên việc thử lại luôn AN TOÀN, không lo tạo đơn trùng.
+    const ORDER_REQUEST_KEY = "diah-order-request-v1";
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
     let currentOrders = [], currentOrdersPhone = "", paymentContext = {mode:"checkout"};
+
+    // Trả về order_id đã dùng cho lần đặt hàng gần nhất nếu "signature" (sản phẩm + số lượng +
+    // SĐT) trùng khớp và chưa quá 30 phút — nghĩa là đây là lần thử lại của CÙNG một đơn, không
+    // phải một đơn mới. Nếu khác, sinh order_id mới cho đơn thật sự mới.
+    function getOrderRequestId(signature){
+      let stored=null;
+      try{ stored=JSON.parse(localStorage.getItem(ORDER_REQUEST_KEY) || "null"); }catch(error){ stored=null }
+      const now=Date.now();
+      if(stored && stored.signature===signature && stored.id && (now-stored.savedAt)<30*60*1000){
+        return stored.id;
+      }
+      const id="TD"+now.toString().slice(-8);
+      try{ localStorage.setItem(ORDER_REQUEST_KEY, JSON.stringify({id,signature,savedAt:now})); }catch(error){}
+      return id;
+    }
+    function clearOrderRequestId(){ try{ localStorage.removeItem(ORDER_REQUEST_KEY); }catch(error){} }
 
     // Fetch với timeout: nếu backend (Apps Script) phản hồi quá chậm (cold start, mạng yếu…)
     // sẽ huỷ sau `timeoutMs` thay vì treo vô hạn, cho phép hiển thị lỗi/dữ liệu cache ngay.
@@ -333,6 +354,23 @@
       }
       if(lastResponse) return lastResponse;
       throw lastError;
+    }
+
+    // Van an toàn cuối cùng: chỉ gọi khi CẢ 2 lần gửi đơn hàng đều thất bại do lỗi mạng thực sự
+    // (không nhận được phản hồi nào từ server), TRƯỚC KHI báo lỗi cho khách. Tra cứu lại đơn
+    // hàng theo đúng SĐT để kiểm tra xem order_id này có lỡ đã được lưu ở phía server hay không
+    // (ví dụ phản hồi thành công bị rớt mạng trên đường về, dù server đã ghi xong) — tránh báo
+    // lỗi oan khiến khách bấm gửi lại trong khi đơn thực ra đã nằm trong Sheet.
+    async function checkOrderAlreadySaved_(orderId, phoneValue){
+      if(!orderId || !phoneValue) return false;
+      try{
+        const url=`${APPS_SCRIPT_URL}?action=orders&phone=${encodeURIComponent(phoneValue)}&key=${encodeURIComponent(APP_SECRET)}&ts=${Date.now()}`;
+        const response=await fetchWithTimeout(url,{cache:"no-store"},12000);
+        if(!response.ok) return false;
+        const payload=await response.json();
+        if(!payload.ok || !Array.isArray(payload.orders)) return false;
+        return payload.orders.some(o=>o.order_id===orderId);
+      }catch(error){ return false; }
     }
 
     const money = value => new Intl.NumberFormat("vi-VN",{style:"currency",currency:"VND",maximumFractionDigits:0}).format(value || 0);
@@ -1117,18 +1155,34 @@
       const groupDiscount=checkoutKind==="ready" ? comboDiscount() : 0;
       const cartTotal=groupSubtotal-groupDiscount;
       const confirmationItems=orderItems.map(i=>({code:i.id,album:i.album,specificationName:i.specificationName||i.specification||i.id,quantity:i.quantity}));
-      const order={order_id:"TD"+Date.now().toString().slice(-8),order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
-      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 10 giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
+      // Giữ đúng 1 order_id cho mọi lần thử của CÙNG đơn (sản phẩm + số lượng + SĐT không đổi):
+      // nếu khách bị timeout ảo và bấm gửi lại (kể cả sau khi tải lại trang), backend nhận ra
+      // đúng order_id này đã xử lý xong sẽ trả kết quả cũ ngay, KHÔNG tạo thêm đơn trùng.
+      const requestSignature=JSON.stringify({items:orderItems.map(i=>`${i.id}:${i.quantity}`),phone:fields.phone,kind:checkoutKind});
+      const orderId=getOrderRequestId(requestSignature);
+      const order={order_id:orderId,order_time:new Date().toISOString(),order_kind:checkoutKind==="preorder"?"preorder":"ready",products:orderItems.map(i=>i.album).join(" | "),variants:orderItems.map(i=>i.specificationName||i.specification||i.id).join(" | "),quantities:orderItems.map(i=>i.quantity).join(" | "),confirmation_items:confirmationItems,subtotal:groupSubtotal,shipping_fee:shippingFee(),combo_discount:groupDiscount,total:cartTotal,cart_total:cartTotal,...fields,payment_method:payment,status:"Chờ xác nhận chuyển khoản"};
+      setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       let result;
       try{
-        const response=await fetchWithTimeout(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",key:APP_SECRET,order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},20000);
+        // Cho phép thử lại 1 lần nếu timeout/mất mạng — AN TOÀN vì order_id không đổi giữa các
+        // lần thử, nên backend sẽ không tạo đơn trùng (xem getOrderRequestId ở trên).
+        const response=await fetchWithRetry(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"createOrder",key:APP_SECRET,order:{...order,items:orderItems.map(i=>({id:i.id,quantity:i.quantity}))}})},25000,1);
         result=await response.json();
       }catch(error){
-        setLoading(false);button.disabled=false;showFormError("Không thể kết nối Google Sheet. Vui lòng thử lại.");return;
+        // Cả 2 lần gửi đều không nhận được phản hồi hợp lệ (mất mạng thực sự, hoặc phản hồi
+        // thành công bị rớt trên đường về) — trước khi báo lỗi, kiểm tra xem đơn có lỡ đã được
+        // lưu ở phía server chưa để tránh báo lỗi oan khiến khách hoang mang/gửi lại thừa.
+        const alreadySaved=await checkOrderAlreadySaved_(orderId,fields.phone);
+        if(alreadySaved){
+          result={ok:true,order_id:orderId,combo_discount:groupDiscount};
+        }else{
+          setLoading(false);button.disabled=false;showFormError("Không thể kết nối Google Sheet. Vui lòng thử lại.");return;
+        }
       }
       setLoading(false);button.disabled=false;
       if(!result.ok){showFormError(result.error || "Không thể lưu đơn hàng vào Google Sheet. Vui lòng thử lại.");return}
       order.combo_discount=result.combo_discount || 0;
+      clearOrderRequestId();
       lastOrder=order;clearCheckoutDraft();cart=cart.filter(item=>checkoutKind==="preorder" ? !item.preorder : item.preorder);updateCartUI();renderConfirmation();showView("confirm");
     }
     function renderConfirmation(){const grouped=[];const groups=new Map();(lastOrder.confirmation_items||[]).forEach(item=>{if(!groups.has(item.album)){const group={album:item.album,items:[]};groups.set(item.album,group);grouped.push(group)}groups.get(item.album).items.push(item)});const productText=grouped.map(group=>`${group.album}\n${group.items.map(item=>`${item.specificationName} × ${item.quantity}`).join("\n")}`).join("\n\n");confirmOrderId.textContent=lastOrder.order_id;confirmProduct.textContent=productText || `${lastOrder.products} × ${lastOrder.quantities}`;confirmTotal.textContent=money(lastOrder.total);confirmAddress.textContent=`${lastOrder.customer_name} · ${lastOrder.phone} — ${lastOrder.address_detail}`;document.querySelector(".confirm-subtitle").textContent="Cảm ơn bạn đẹp đã chốt đơn cùng Diah <3";document.getElementById("confirmInstruction").textContent=`${lastOrder.facebook_name} chỉ cần Copy thông tin đơn hàng rồi gửi qua Facebook Page để shop gửi mã vận đơn nữa là xong ạ ~`;document.getElementById("confirmCopyText").textContent=`${productText || `${lastOrder.products} x ${lastOrder.quantities}`}\n${money(lastOrder.total)}\n${lastOrder.customer_name} · ${lastOrder.phone} · ${lastOrder.address_detail}`;lucide.createIcons();}
