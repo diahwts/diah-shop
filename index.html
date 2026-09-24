@@ -312,6 +312,12 @@
     // dùng order_id này làm khoá chống trùng: nếu đơn với đúng ID này đã lưu rồi thì trả về kết
     // quả cũ thay vì tạo thêm dòng mới, nên việc thử lại luôn AN TOÀN, không lo tạo đơn trùng.
     const ORDER_REQUEST_KEY = "diah-order-request-v1";
+    // Thời gian tối thiểu (mili-giây) hiển thị màn "Đang kiểm tra tồn kho…" trước khi chuyển
+    // sang màn "Đang lưu đơn hàng…" — THUẦN HIỂN THỊ, không ảnh hưởng thời gian gọi backend thật.
+    // Cần thiết vì thường lúc submitOrder chạy tới đây, việc kiểm tra tồn kho đã prefetch xong từ
+    // trước (xem stockPrefetch/ensureStockPrefetch bên dưới) nên nếu không có mốc tối thiểu này,
+    // màn hình sẽ chuyển gần như tức thời, khiến khách không kịp thấy màn kiểm tra tồn kho.
+    const STOCK_CHECK_MIN_DISPLAY_MS = 900;
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
     // Promise của lần kiểm tra tồn kho chạy ngầm — được kích hoạt SỚM nhất có thể (ngay lúc
     // khách bấm "Thanh toán" ở Giỏ hàng, trước cả khi điền form) để tận dụng thời gian khách
@@ -1188,8 +1194,14 @@
       const button=document.getElementById("placeOrderBtn");button.disabled=true;setLoading(true,"Đang kiểm tra tồn kho mới nhất…","Thường mất 3 giây. Vì trang web có thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể mất thêm vài giây.","Bạn đẹp có thể squat 1 cái trong lúc chờ 🥂~");
       // Dùng lại promise kiểm tra tồn kho đã chạy ngầm từ trước (xem ensureStockPrefetch) thay vì
       // gọi lại từ đầu. Nếu vì lý do nào đó chưa có (ví dụ khách vào lại trang giữa chừng), mới
-      // gọi mới ở đây.
-      await (stockPrefetch || loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1}));
+      // gọi mới ở đây. Vì thường lúc này prefetch đã chạy xong từ trước (gần như tức thời), cộng
+      // thêm STOCK_CHECK_MIN_DISPLAY_MS để màn "Đang kiểm tra tồn kho…" luôn hiện đủ lâu cho
+      // khách kịp đọc, thay vì thoáng qua rồi biến mất ngay sang màn "Đang lưu đơn hàng…" — thuần
+      // hiển thị, KHÔNG liên quan gì đến việc gọi backend thật.
+      await Promise.all([
+        stockPrefetch || loadProducts(false,false,{maxAgeMs:20000,timeoutMs:8000,retries:1}),
+        new Promise(resolve=>setTimeout(resolve,STOCK_CHECK_MIN_DISPLAY_MS))
+      ]);
       stockPrefetch=null;
       const unavailable=orderItems.find(item=>{const fresh=products.find(p=>p.id===item.id);return !fresh||(!item.preorder && fresh.stock<item.quantity)});
       if(unavailable){setLoading(false);button.disabled=false;showFormError(`Sản phẩm “${unavailable.album}” không còn đủ tồn kho. Vui lòng cập nhật giỏ hàng.`);reconcileCart();updateCartUI();return}
