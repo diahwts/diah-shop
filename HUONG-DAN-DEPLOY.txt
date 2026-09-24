@@ -1,0 +1,37 @@
+HƯỚNG DẪN CẬP NHẬT TRANG Diah.wts TRÊN GITHUB PAGES
+=====================================================
+
+TRANG ĐÃ LIVE TẠI:
+  https://nemda9996.github.io/diah-shop/
+
+(Miễn phí vĩnh viễn, không có domain hết hạn, không lo hết tiền bị đóng trang.
+Do GitHub host, chỉ mất nếu bạn tự xoá tài khoản/repo.)
+
+Đã cài sẵn Git + GitHub CLI trên máy này. Thư mục
+C:\Users\admin\OneDrive\Desktop\diah-shop-deploy
+là 1 git repo đã được đẩy (push) lên GitHub repo "nemda9996/diah-shop".
+
+MUỐN CẬP NHẬT TRANG SAU NÀY (sau khi sửa new.demo10.html)
+----------------------------------------------------------
+Cách dễ nhất — qua web (không cần dòng lệnh):
+  1. Copy nội dung file mới đã sửa (new.demo10.html) đè vào file index.html
+     trong thư mục diah-shop-deploy.
+  2. Vào https://github.com/nemda9996/diah-shop
+  3. Bấm vào index.html -> biểu tượng cây bút (Edit) -> dán nội dung mới -> Commit changes.
+  4. Đợi 1-2 phút, trang live sẽ tự cập nhật.
+
+Cách qua dòng lệnh (nếu đã "gh auth login" xong):
+  cd "C:\Users\admin\OneDrive\Desktop\diah-shop-deploy"
+  git add -A
+  git commit -m "Cập nhật trang"
+  git push
+
+GHI CHÚ
+-------
+- Backend (Google Apps Script) không đổi, vẫn dùng chung URL cũ, không ảnh hưởng
+  bởi việc host frontend ở đâu.
+- Các script "Canva Codelet" nội bộ (__codeletBootstrap__, /_sdk/*.js) đã được
+  gỡ khỏi bản deploy vì chỉ chạy được trong môi trường edit của Canva.
+- Nếu lần đầu tải trang bị "Không thể tải sản phẩm", chỉ cần bấm nút làm mới
+  hoặc load lại trang — đây là do Google Apps Script "cold start" (khởi động
+  chậm lần gọi đầu), không phải lỗi của trang.
