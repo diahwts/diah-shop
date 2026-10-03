@@ -9,175 +9,265 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='76' text-anchor='middle' font-size='82'%3E%F0%9F%8E%A7%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <style>
     :root{--ink:#102b46;--white:#fff;--mist:#f7fbfb;--pastel:#cfe8e8;--pink:#ffdce8;--line:#d9d9d9;--muted:#777}
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{width:100%;margin:0;background:var(--mist)}
-    body{font-family:"Be Vietnam Pro",sans-serif;color:var(--ink);line-height:1.55}
-    .page{width:100%;max-width:640px;margin:0 auto;padding:22px 18px 60px;background:var(--white);min-height:100vh;border-inline:1px solid var(--line)}
-    .topbar{display:flex;align-items:center;gap:12px;padding:6px 0 18px;border-bottom:1px solid var(--line);margin-bottom:20px}
-    .back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:11px;padding:8px 13px;font-size:13px;font-weight:600;text-decoration:none;transition:.18s}
+    body{font-family:"Be Vietnam Pro",sans-serif;color:var(--ink)}
+    button{cursor:pointer;margin:0;padding:0;background:none;border:0;-webkit-appearance:none;appearance:none;text-align:inherit;font:inherit;color:inherit}
+    @keyframes holoShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+    .app-shell{width:100%;max-width:470px;min-height:100vh;margin:auto;position:relative;background:var(--white);border-inline:1px solid var(--line)}
+    .page-head{display:flex;gap:12px;align-items:center;padding:14px 18px;position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+    .back-btn{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:11px;transition:.18s;text-decoration:none}
     .back-btn:hover{color:#fff;background:var(--ink);border-color:var(--ink)}
-    h1{font-size:19px;margin:0 0 4px}
-    .subtitle{color:var(--muted);font-size:12px;margin:0 0 18px}
-    h2{font-size:14px;margin:26px 0 8px;letter-spacing:.01em}
-    h3.lang-divider{margin:34px 0 14px;padding-top:22px;border-top:2px dashed var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:center}
-    p,li{font-size:13.5px}
-    ul{padding-left:20px;margin:8px 0}
-    table{width:100%;border-collapse:collapse;margin:10px 0 4px;font-size:12.5px}
-    th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
-    th{background:var(--mist);font-weight:700}
+    .page-head h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+
+    .section-pad{padding:18px 18px 4px}
+    .doc-subtitle{margin:0 0 20px;color:var(--muted);font-size:12px;font-style:italic;line-height:1.55}
+
+    .doc-section{margin:0 0 16px}
+    .doc-title{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:2px;align-items:start;margin-bottom:8px;font-size:13px;font-weight:700;letter-spacing:.01em}
+    .doc-title .ico{display:block;font-size:15px;line-height:1.3}
+
+    .doc-card{padding:13px 14px;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 5px 16px rgba(16,29,52,.035);font-size:13px;line-height:1.6}
+    .doc-card p{margin:0 0 8px}.doc-card p:last-child{margin-bottom:0}
+
+    .doc-list{display:grid;gap:7px}
+    .doc-item{display:grid;grid-template-columns:10px minmax(0,1fr);column-gap:8px;font-size:12.5px;line-height:1.55}
+    .doc-item .dot{display:block;text-align:center}
+    .doc-item strong{color:var(--ink)}
+    .doc-item span.muted{color:var(--muted)}
+
+    .doc-highlight{padding:13px 14px;color:var(--ink);background:linear-gradient(120deg,#e8f6f6,#cfe8e8,#dff3f3,#cfe8e8,#e8f6f6);background-size:300% 300%;animation:holoShift 6s ease infinite;border:1px solid #bddddd;border-radius:13px;font-size:12.5px;line-height:1.55}
+    .doc-highlight .doc-title{margin-bottom:8px}
+
+    .lang-divider{margin:28px 0 20px;padding-top:20px;border-top:1px dashed var(--line);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#789393;text-align:center}
+
+    .contact-footer{display:flex;align-items:center;gap:8px;margin:24px 0 24px;padding:12px 14px;background:linear-gradient(135deg,#e8f6f6,#fff);border:1px solid #bddddd;border-radius:12px;font-size:12.5px;color:var(--ink)}
+
     a{color:#1a5276}
-    strong{color:var(--ink)}
-    .contact-box{margin-top:30px;padding:14px 16px;background:linear-gradient(135deg,#e8f6f6,#fff);border:1px solid #bddddd;border-radius:13px;font-size:13px}
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="topbar">
-      <a class="back-btn" href="index.html">← Về trang chủ</a>
+  <div class="app-shell">
+    <div class="page-head">
+      <a class="back-btn" href="index.html" aria-label="Quay lại"><i data-lucide="arrow-left" width="20"></i></a>
+      <h1>Chính sách Bảo mật &amp; Bảo vệ Dữ liệu Cá nhân</h1>
     </div>
-    <h1>Chính sách Bảo mật &amp; Bảo vệ Dữ liệu Cá nhân</h1>
-    <p class="subtitle">Diah.wts Shop</p>
 
-    <h2>1. Chúng tôi là ai</h2>
-    <p>Diah.wts là một gian hàng/shop online bán hàng qua trang web đặt hàng và Facebook.</p>
-    <ul>
-      <li>Tên shop: <strong>Diah.wts</strong></li>
-      <li>Email liên hệ: <strong>Diah.notice@gmail.com</strong></li>
-    </ul>
-    <p>Mọi câu hỏi, yêu cầu về dữ liệu cá nhân, vui lòng liên hệ qua email trên.</p>
+    <div class="section-pad">
+      <p class="doc-subtitle">Diah.wts Shop</p>
 
-    <h2>2. Dữ liệu chúng tôi thu thập</h2>
-    <p>Khi bạn đặt hàng qua trang web, chúng tôi thu thập các thông tin sau (chỉ những gì bạn chủ động nhập vào form đặt hàng):</p>
-    <table>
-      <tr><th>Thông tin</th><th>Mục đích</th></tr>
-      <tr><td>Họ tên khách hàng</td><td>Ghi nhận người đặt hàng, giao hàng</td></tr>
-      <tr><td>Số điện thoại</td><td>Liên hệ xác nhận đơn, giao hàng, và dùng làm <strong>mã tra cứu đơn hàng</strong></td></tr>
-      <tr><td>Địa chỉ giao hàng</td><td>Giao hàng</td></tr>
-      <tr><td>Email (nếu có)</td><td>Liên hệ, gửi xác nhận đơn (tuỳ chọn)</td></tr>
-      <tr><td>Tên/link Facebook</td><td>Đối chiếu người đặt hàng qua Facebook (nếu đặt qua fanpage)</td></tr>
-      <tr><td>Nội dung đơn hàng (sản phẩm, số lượng, giá, ghi chú)</td><td>Xử lý đơn hàng</td></tr>
-      <tr><td>Phương thức &amp; trạng thái thanh toán</td><td>Theo dõi công nợ/đã thanh toán</td></tr>
-      <tr><td>Trạng thái &amp; mã vận đơn giao hàng</td><td>Theo dõi giao hàng</td></tr>
-    </table>
-    <p>Chúng tôi <strong>không</strong> thu thập: mật khẩu, thông tin thẻ ngân hàng/thanh toán trực tuyến (nếu bạn chuyển khoản, số tài khoản ngân hàng của bạn <strong>không</strong> được hệ thống này lưu lại), dữ liệu định vị, hay dùng cookie theo dõi/phân tích hành vi nào (trang web hiện tại <strong>không</strong> dùng Google Analytics, Facebook Pixel, hay bất kỳ công cụ theo dõi bên thứ ba nào — chỉ đơn thuần là form đặt hàng).</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🙋</span><span>1. Chúng tôi là ai</span></div>
+        <div class="doc-card">
+          <p>Diah.wts là một gian hàng/shop online bán hàng qua trang web đặt hàng và Facebook.</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Tên shop: <strong>Diah.wts</strong></span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Email liên hệ: <strong>Diah.notice@gmail.com</strong></span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Địa chỉ đăng ký kinh doanh: <strong>***, Hà Nội</strong></span></div>
+          </div>
+          <p style="margin-top:8px">Mọi câu hỏi, yêu cầu về dữ liệu cá nhân, vui lòng liên hệ qua email trên.</p>
+        </div>
+      </div>
 
-    <h2>3. Dữ liệu được lưu ở đâu, bằng cách nào</h2>
-    <ul>
-      <li>Toàn bộ dữ liệu đơn hàng được lưu trong <strong>Google Sheets</strong>, xử lý bởi <strong>Google Apps Script</strong> (chạy trên hạ tầng của Google).</li>
-      <li>Việc tra cứu đơn hàng trên trang web <strong>yêu cầu đúng số điện thoại đã dùng khi đặt hàng</strong> — hệ thống <strong>chỉ trả về đúng (các) đơn hàng khớp số điện thoại đó</strong>, không có chức năng liệt kê toàn bộ đơn hàng của mọi khách cho bất kỳ ai, kể cả nhân viên vận hành trang web (trừ khi truy cập trực tiếp vào Google Sheet gốc với tài khoản được cấp quyền).</li>
-      <li>Vì vậy: <strong>nếu bạn không cung cấp đúng số điện thoại đã đặt hàng, bạn sẽ không tra cứu được đơn hàng của người khác</strong> qua trang web.</li>
-    </ul>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🗂️</span><span>2. Dữ liệu chúng tôi thu thập</span></div>
+        <div class="doc-card">
+          <p>Khi bạn đặt hàng qua trang web, chúng tôi thu thập các thông tin sau (chỉ những gì bạn chủ động nhập vào form đặt hàng):</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span><strong>Họ tên khách hàng</strong> — <span class="muted">ghi nhận người đặt hàng, giao hàng</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Số điện thoại</strong> — <span class="muted">liên hệ xác nhận đơn, giao hàng, và dùng làm mã tra cứu đơn hàng</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Địa chỉ giao hàng</strong> — <span class="muted">giao hàng</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Email (nếu có)</strong> — <span class="muted">liên hệ, gửi xác nhận đơn (tuỳ chọn)</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Tên/link Facebook</strong> — <span class="muted">đối chiếu người đặt hàng qua fanpage (nếu có)</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Nội dung đơn hàng</strong> — <span class="muted">sản phẩm, số lượng, giá, ghi chú để xử lý đơn</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Phương thức &amp; trạng thái thanh toán</strong> — <span class="muted">theo dõi công nợ/đã thanh toán</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Trạng thái &amp; mã vận đơn</strong> — <span class="muted">theo dõi giao hàng</span></span></div>
+          </div>
+          <p style="margin-top:8px">Chúng tôi <strong>không</strong> thu thập: mật khẩu, thông tin thẻ ngân hàng/thanh toán trực tuyến (nếu bạn chuyển khoản, số tài khoản ngân hàng của bạn <strong>không</strong> được hệ thống này lưu lại), dữ liệu định vị, hay dùng cookie theo dõi/phân tích hành vi nào (trang web hiện tại <strong>không</strong> dùng Google Analytics, Facebook Pixel, hay bất kỳ công cụ theo dõi bên thứ ba nào — chỉ đơn thuần là form đặt hàng).</p>
+        </div>
+      </div>
 
-    <h2>4. Ai có thể truy cập dữ liệu của bạn</h2>
-    <ul>
-      <li>Chủ shop Diah.wts và người được chủ shop cấp quyền truy cập trực tiếp Google Sheet (quản lý đơn hàng).</li>
-      <li><strong>Đơn vị vận chuyển/giao hàng</strong>: chúng tôi chia sẻ tên, số điện thoại và địa chỉ giao hàng của bạn cho đơn vị vận chuyển phụ trách giao đơn hàng của bạn, <strong>chỉ nhằm mục đích giao hàng</strong>, không dùng cho mục đích nào khác.</li>
-      <li>Google (với vai trò nhà cung cấp hạ tầng lưu trữ Google Sheets/Apps Script) — theo <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Chính sách bảo mật của Google</a>.</li>
-      <li>Chúng tôi <strong>không bán</strong>, không trao đổi, không cho thuê dữ liệu cá nhân của bạn cho bên thứ ba vì mục đích quảng cáo/tiếp thị.</li>
-    </ul>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">💾</span><span>3. Dữ liệu được lưu ở đâu, bằng cách nào</span></div>
+        <div class="doc-card">
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Toàn bộ dữ liệu đơn hàng được lưu trong <strong>Google Sheets</strong>, xử lý bởi <strong>Google Apps Script</strong> (chạy trên hạ tầng của Google).</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Việc tra cứu đơn hàng trên trang web <strong>yêu cầu đúng số điện thoại đã dùng khi đặt hàng</strong> — hệ thống chỉ trả về đúng (các) đơn hàng khớp số điện thoại đó, không có chức năng liệt kê toàn bộ đơn hàng của mọi khách cho bất kỳ ai.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Vì vậy: <strong>nếu bạn không cung cấp đúng số điện thoại đã đặt hàng, bạn sẽ không tra cứu được đơn hàng của người khác</strong> qua trang web.</span></div>
+          </div>
+        </div>
+      </div>
 
-    <h2>5. Mức độ bảo mật thực tế (minh bạch với bạn)</h2>
-    <p>Chúng tôi muốn minh bạch về giới hạn bảo mật hiện tại thay vì hứa hẹn những gì không đúng:</p>
-    <ul>
-      <li>Việc tra cứu đơn hàng dùng cơ chế "nhập đúng số điện thoại" — đây <strong>không phải</strong> mã OTP hay xác thực hai lớp, nên <strong>nếu ai đó biết/đoán đúng số điện thoại bạn đã dùng để đặt hàng</strong>, họ có thể xem được đơn hàng gắn với số đó (tên, địa chỉ, nội dung đơn). Vì vậy, vui lòng <strong>không chia sẻ số điện thoại đặt hàng</strong> cho người bạn không tin tưởng nếu không muốn họ tra được lịch sử đơn hàng.</li>
-      <li>Chúng tôi đang áp dụng các biện pháp kỹ thuật hợp lý để hạn chế truy cập tự động/hàng loạt (giới hạn mỗi lượt tra cứu chỉ trả về đúng 1 số điện thoại, không có chức năng "xem tất cả"), và sẽ tiếp tục cải thiện (ví dụ: giới hạn số lần tra cứu liên tục) theo thời gian.</li>
-      <li>Dữ liệu được lưu trên hạ tầng Google — bảo mật vật lý/hệ thống do Google đảm trách; Diah.wts chịu trách nhiệm cấu hình quyền truy cập và mã nguồn xử lý đơn hàng.</li>
-    </ul>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">👥</span><span>4. Ai có thể truy cập dữ liệu của bạn</span></div>
+        <div class="doc-card">
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Chủ shop Diah.wts và người được chủ shop cấp quyền truy cập trực tiếp Google Sheet (quản lý đơn hàng).</span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Đơn vị vận chuyển/giao hàng</strong>: chúng tôi chia sẻ tên, số điện thoại và địa chỉ giao hàng của bạn cho đơn vị vận chuyển phụ trách giao đơn hàng của bạn, chỉ nhằm mục đích giao hàng.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Google (nhà cung cấp hạ tầng lưu trữ Google Sheets/Apps Script) — theo <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Chính sách bảo mật của Google</a>.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Chúng tôi <strong>không bán</strong>, không trao đổi, không cho thuê dữ liệu cá nhân của bạn cho bên thứ ba vì mục đích quảng cáo/tiếp thị.</span></div>
+          </div>
+        </div>
+      </div>
 
-    <h2>6. Thời gian lưu trữ</h2>
-    <p>Chúng tôi lưu dữ liệu đơn hàng trong thời gian cần thiết để xử lý đơn hàng, đối chiếu công nợ, bảo hành/khiếu nại và tuân thủ nghĩa vụ kế toán/pháp lý (nếu có). Khi không còn cần thiết cho các mục đích trên, dữ liệu sẽ được xoá hoặc ẩn danh hoá.</p>
+      <div class="doc-section">
+        <div class="doc-highlight">
+          <div class="doc-title"><span class="ico">🔒</span><span>5. Mức độ bảo mật thực tế (minh bạch với bạn)</span></div>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Việc tra cứu đơn hàng dùng cơ chế "nhập đúng số điện thoại" — đây <strong>không phải</strong> mã OTP hay xác thực hai lớp. Nếu ai đó biết/đoán đúng số điện thoại bạn đã dùng để đặt hàng, họ có thể xem được đơn hàng gắn với số đó. Vui lòng <strong>không chia sẻ số điện thoại đặt hàng</strong> cho người bạn không tin tưởng.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Mỗi lượt tra cứu chỉ trả về đúng 1 số điện thoại, không có chức năng "xem tất cả"; chúng tôi sẽ tiếp tục cải thiện các biện pháp kỹ thuật theo thời gian.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Dữ liệu được lưu trên hạ tầng Google — bảo mật vật lý/hệ thống do Google đảm trách; Diah.wts chịu trách nhiệm cấu hình quyền truy cập và mã nguồn xử lý đơn hàng.</span></div>
+          </div>
+        </div>
+      </div>
 
-    <h2>7. Quyền của bạn</h2>
-    <p>Theo quy định của pháp luật Việt Nam về bảo vệ dữ liệu cá nhân (Nghị định 13/2023/NĐ-CP), bạn có quyền:</p>
-    <ul>
-      <li>Được biết dữ liệu nào của mình đang được xử lý;</li>
-      <li>Yêu cầu truy cập, chỉnh sửa thông tin đơn hàng của mình (qua chức năng "Sửa địa chỉ/đơn hàng" trên trang web, xác thực bằng số điện thoại);</li>
-      <li>Yêu cầu xoá dữ liệu cá nhân (trừ trường hợp pháp luật yêu cầu lưu giữ, ví dụ chứng từ kế toán);</li>
-      <li>Rút lại sự đồng ý cung cấp dữ liệu (lưu ý: điều này có thể khiến chúng tôi không thể xử lý/giao đơn hàng đang chờ);</li>
-      <li>Khiếu nại nếu cho rằng dữ liệu bị xử lý sai mục đích.</li>
-    </ul>
-    <p>Mọi yêu cầu vui lòng gửi về email: <strong>Diah.notice@gmail.com</strong>. Chúng tôi sẽ phản hồi trong thời gian sớm nhất có thể.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🗓️</span><span>6. Thời gian lưu trữ</span></div>
+        <div class="doc-card">
+          <p>Chúng tôi lưu dữ liệu đơn hàng trong thời gian cần thiết để xử lý đơn hàng, đối chiếu công nợ, bảo hành/khiếu nại và tuân thủ nghĩa vụ kế toán/pháp lý (nếu có). Khi không còn cần thiết cho các mục đích trên, dữ liệu sẽ được xoá hoặc ẩn danh hoá.</p>
+        </div>
+      </div>
 
-    <h2>8. Trẻ em</h2>
-    <p>Trang web không nhắm đến trẻ em dưới 16 tuổi. Nếu phát hiện dữ liệu của trẻ em được thu thập mà không có sự đồng ý của cha mẹ/người giám hộ, vui lòng liên hệ để chúng tôi xoá.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">⚖️</span><span>7. Quyền của bạn</span></div>
+        <div class="doc-card">
+          <p>Theo quy định của pháp luật Việt Nam về bảo vệ dữ liệu cá nhân (Nghị định 13/2023/NĐ-CP), bạn có quyền:</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Được biết dữ liệu nào của mình đang được xử lý;</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Yêu cầu truy cập, chỉnh sửa thông tin đơn hàng của mình (qua chức năng "Sửa địa chỉ/đơn hàng", xác thực bằng số điện thoại);</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Yêu cầu xoá dữ liệu cá nhân (trừ trường hợp pháp luật yêu cầu lưu giữ, ví dụ chứng từ kế toán);</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Rút lại sự đồng ý cung cấp dữ liệu (có thể khiến chúng tôi không thể xử lý/giao đơn hàng đang chờ);</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Khiếu nại nếu cho rằng dữ liệu bị xử lý sai mục đích.</span></div>
+          </div>
+          <p style="margin-top:8px">Mọi yêu cầu vui lòng gửi về email: <strong>Diah.notice@gmail.com</strong>. Chúng tôi sẽ phản hồi trong thời gian sớm nhất có thể.</p>
+        </div>
+      </div>
 
-    <h2>9. Thay đổi chính sách</h2>
-    <p>Chính sách này có thể được cập nhật khi hệ thống thay đổi (ví dụ: thêm/bớt đơn vị vận chuyển, thêm công cụ phân tích web...). Phiên bản mới nhất luôn được đăng tại mục "Bảo mật" trên trang web của chúng tôi.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🧒</span><span>8. Trẻ em</span></div>
+        <div class="doc-card">
+          <p>Trang web không nhắm đến trẻ em dưới 16 tuổi. Nếu phát hiện dữ liệu của trẻ em được thu thập mà không có sự đồng ý của cha mẹ/người giám hộ, vui lòng liên hệ để chúng tôi xoá.</p>
+        </div>
+      </div>
 
-    <h3 class="lang-divider">— English version below —</h3>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🔄</span><span>9. Thay đổi chính sách</span></div>
+        <div class="doc-card">
+          <p>Chính sách này có thể được cập nhật khi hệ thống thay đổi (ví dụ: thêm/bớt đơn vị vận chuyển, thêm công cụ phân tích web...). Phiên bản mới nhất luôn được đăng tại mục "Bảo mật" trên trang web của chúng tôi.</p>
+        </div>
+      </div>
 
-    <h2>1. Who we are</h2>
-    <p>Diah.wts is an online shop selling via our order website and Facebook.</p>
-    <ul>
-      <li>Shop name: <strong>Diah.wts</strong></li>
-      <li>Contact email: <strong>Diah.notice@gmail.com</strong></li>
-    </ul>
-    <p>For any question or data request, please contact us at the email above.</p>
+      <div class="lang-divider">— English version below —</div>
 
-    <h2>2. What data we collect</h2>
-    <p>When you place an order through our website, we collect only what you voluntarily enter in the order form:</p>
-    <table>
-      <tr><th>Data</th><th>Purpose</th></tr>
-      <tr><td>Customer name</td><td>Identify the orderer, delivery</td></tr>
-      <tr><td>Phone number</td><td>Order confirmation, delivery, and used as the <strong>order lookup key</strong></td></tr>
-      <tr><td>Shipping address</td><td>Delivery</td></tr>
-      <tr><td>Email (optional)</td><td>Contact, order confirmation</td></tr>
-      <tr><td>Facebook name/link</td><td>Matching with Facebook page orders</td></tr>
-      <tr><td>Order details (items, quantity, price, notes)</td><td>Order processing</td></tr>
-      <tr><td>Payment method &amp; status</td><td>Payment reconciliation</td></tr>
-      <tr><td>Shipping status &amp; tracking</td><td>Delivery tracking</td></tr>
-    </table>
-    <p>We do <strong>not</strong> collect: passwords, online payment card data (if you pay by bank transfer, your bank account number is <strong>not</strong> stored by this system), location data, and the website currently does <strong>not</strong> use any tracking cookies, Google Analytics, Facebook Pixel, or any third-party analytics tool — it is simply an order form.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🙋</span><span>1. Who we are</span></div>
+        <div class="doc-card">
+          <p>Diah.wts is an online shop selling via our order website and Facebook.</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Shop name: <strong>Diah.wts</strong></span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Contact email: <strong>Diah.notice@gmail.com</strong></span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Registered business address: <strong>***, Hà Nội, Vietnam</strong></span></div>
+          </div>
+          <p style="margin-top:8px">For any question or data request, please contact us at the email above.</p>
+        </div>
+      </div>
 
-    <h2>3. Where and how data is stored</h2>
-    <ul>
-      <li>All order data is stored in <strong>Google Sheets</strong>, processed via <strong>Google Apps Script</strong> (running on Google's infrastructure).</li>
-      <li>Looking up an order on the website <strong>requires the exact phone number used when ordering</strong> — the system <strong>only returns the order(s) matching that phone number</strong>, with no feature to list all customers' orders to anyone, including site operators, except by direct, permissioned access to the underlying Google Sheet.</li>
-      <li>Therefore: <strong>without the correct phone number used for an order, you cannot look up someone else's order</strong> via the website.</li>
-    </ul>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🗂️</span><span>2. What data we collect</span></div>
+        <div class="doc-card">
+          <p>When you place an order through our website, we collect only what you voluntarily enter in the order form:</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span><strong>Customer name</strong> — <span class="muted">identify the orderer, delivery</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Phone number</strong> — <span class="muted">order confirmation, delivery, and used as the order lookup key</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Shipping address</strong> — <span class="muted">delivery</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Email (optional)</strong> — <span class="muted">contact, order confirmation</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Facebook name/link</strong> — <span class="muted">matching with Facebook page orders</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Order details</strong> — <span class="muted">items, quantity, price, notes for order processing</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Payment method &amp; status</strong> — <span class="muted">payment reconciliation</span></span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Shipping status &amp; tracking</strong> — <span class="muted">delivery tracking</span></span></div>
+          </div>
+          <p style="margin-top:8px">We do <strong>not</strong> collect: passwords, online payment card data (if you pay by bank transfer, your bank account number is <strong>not</strong> stored by this system), location data, and the website currently does <strong>not</strong> use any tracking cookies, Google Analytics, Facebook Pixel, or any third-party analytics tool — it is simply an order form.</p>
+        </div>
+      </div>
 
-    <h2>4. Who can access your data</h2>
-    <ul>
-      <li>The Diah.wts shop owner and staff explicitly granted access to the Google Sheet (for order management).</li>
-      <li><strong>Shipping/delivery partners</strong>: we share your name, phone number, and shipping address with the delivery partner handling your order, <strong>solely for delivery purposes</strong>, for no other purpose.</li>
-      <li>Google, as the infrastructure provider for Google Sheets/Apps Script — subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>.</li>
-      <li>We do <strong>not</strong> sell, trade, or rent your personal data to third parties for advertising/marketing purposes.</li>
-    </ul>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">💾</span><span>3. Where and how data is stored</span></div>
+        <div class="doc-card">
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>All order data is stored in <strong>Google Sheets</strong>, processed via <strong>Google Apps Script</strong> (running on Google's infrastructure).</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Looking up an order <strong>requires the exact phone number used when ordering</strong> — the system only returns the order(s) matching that phone number, with no feature to list all customers' orders to anyone.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Therefore: <strong>without the correct phone number used for an order, you cannot look up someone else's order</strong> via the website.</span></div>
+          </div>
+        </div>
+      </div>
 
-    <h2>5. Realistic security posture (being transparent with you)</h2>
-    <p>We prefer to be transparent about current limitations rather than overpromise:</p>
-    <ul>
-      <li>Order lookup relies on "enter the correct phone number" — this is <strong>not</strong> an OTP or two-factor verification. If someone else knows or guesses the phone number you used to order, they could view the order tied to that number (name, address, order contents). Please <strong>do not share the phone number used for your order</strong> with anyone you don't want to be able to see your order history.</li>
-      <li>We apply reasonable technical limits (each lookup returns data for exactly one phone number; there is no "view all" feature), and we will continue improving these controls over time (e.g., rate-limiting repeated lookups).</li>
-      <li>Data is hosted on Google's infrastructure — physical/system-level security is Google's responsibility; Diah.wts is responsible for configuring access permissions and the order-processing code.</li>
-    </ul>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">👥</span><span>4. Who can access your data</span></div>
+        <div class="doc-card">
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>The Diah.wts shop owner and staff explicitly granted access to the Google Sheet (for order management).</span></div>
+            <div class="doc-item"><span class="dot">•</span><span><strong>Shipping/delivery partners</strong>: we share your name, phone number, and shipping address with the delivery partner handling your order, solely for delivery purposes.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Google, as the infrastructure provider — subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>We do <strong>not</strong> sell, trade, or rent your personal data to third parties for advertising/marketing purposes.</span></div>
+          </div>
+        </div>
+      </div>
 
-    <h2>6. Retention period</h2>
-    <p>We retain order data for as long as necessary to process orders, reconcile payments, handle warranty/complaints, and comply with accounting/legal obligations (if any). Once no longer necessary for these purposes, the data will be deleted or anonymized.</p>
+      <div class="doc-section">
+        <div class="doc-highlight">
+          <div class="doc-title"><span class="ico">🔒</span><span>5. Realistic security posture</span></div>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Order lookup relies on "enter the correct phone number" — this is <strong>not</strong> an OTP or two-factor verification. If someone else knows or guesses your phone number, they could view the order tied to it. Please <strong>do not share your order phone number</strong> with anyone you don't trust.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Each lookup returns data for exactly one phone number; there is no "view all" feature. We will continue improving these controls over time.</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Data is hosted on Google's infrastructure — physical/system-level security is Google's responsibility; Diah.wts is responsible for access permissions and order-processing code.</span></div>
+          </div>
+        </div>
+      </div>
 
-    <h2>7. Your rights</h2>
-    <p>Under Vietnam's personal data protection regulations (Decree 13/2023/ND-CP), you have the right to:</p>
-    <ul>
-      <li>Know what personal data of yours is being processed;</li>
-      <li>Request access to or correction of your order information (via the "edit address/order" feature on the website, verified by phone number);</li>
-      <li>Request deletion of your personal data (except where retention is legally required, e.g., accounting records);</li>
-      <li>Withdraw consent to data collection (note: this may prevent us from processing/delivering a pending order);</li>
-      <li>Lodge a complaint if you believe your data has been processed for an improper purpose.</li>
-    </ul>
-    <p>Please send any request to: <strong>Diah.notice@gmail.com</strong>. We will respond as soon as possible.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🗓️</span><span>6. Retention period</span></div>
+        <div class="doc-card">
+          <p>We retain order data for as long as necessary to process orders, reconcile payments, handle warranty/complaints, and comply with accounting/legal obligations (if any). Once no longer necessary, the data will be deleted or anonymized.</p>
+        </div>
+      </div>
 
-    <h2>8. Children</h2>
-    <p>Our website is not directed at children under 16. If you believe a child's data has been collected without parental/guardian consent, please contact us so we can delete it.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">⚖️</span><span>7. Your rights</span></div>
+        <div class="doc-card">
+          <p>Under Vietnam's personal data protection regulations (Decree 13/2023/ND-CP), you have the right to:</p>
+          <div class="doc-list">
+            <div class="doc-item"><span class="dot">•</span><span>Know what personal data of yours is being processed;</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Request access to or correction of your order information (verified by phone number);</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Request deletion of your personal data (except where legally required, e.g. accounting records);</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Withdraw consent to data collection (may prevent processing/delivering a pending order);</span></div>
+            <div class="doc-item"><span class="dot">•</span><span>Lodge a complaint if you believe your data has been processed for an improper purpose.</span></div>
+          </div>
+          <p style="margin-top:8px">Please send any request to: <strong>Diah.notice@gmail.com</strong>. We will respond as soon as possible.</p>
+        </div>
+      </div>
 
-    <h2>9. Changes to this policy</h2>
-    <p>This policy may be updated as our system changes (e.g., adding/removing delivery partners, adding web analytics tools). The latest version will always be posted on the "Security/Privacy" page of our website.</p>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🧒</span><span>8. Children</span></div>
+        <div class="doc-card">
+          <p>Our website is not directed at children under 16. If you believe a child's data has been collected without parental/guardian consent, please contact us so we can delete it.</p>
+        </div>
+      </div>
 
-    <div class="contact-box">
-      📩 Mọi thắc mắc về dữ liệu cá nhân / data protection questions: <strong>Diah.notice@gmail.com</strong>
+      <div class="doc-section">
+        <div class="doc-title"><span class="ico">🔄</span><span>9. Changes to this policy</span></div>
+        <div class="doc-card">
+          <p>This policy may be updated as our system changes. The latest version will always be posted on the "Security/Privacy" page of our website.</p>
+        </div>
+      </div>
+
+      <div class="contact-footer">📩&nbsp;<span>Mọi thắc mắc về dữ liệu cá nhân: <strong>Diah.notice@gmail.com</strong></span></div>
     </div>
   </div>
+  <script>lucide.createIcons();</script>
 </body>
 </html>
