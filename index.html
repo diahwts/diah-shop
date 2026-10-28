@@ -49,6 +49,9 @@
     .hero-carousel{position:relative;overflow:hidden;margin:18px 18px 0;min-height:220px;background:#f3f5f5;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(16,29,52,.07)}
     .slides{display:flex;align-items:center;transition:transform .35s cubic-bezier(.2,.8,.2,1)}.slide{min-width:100%;display:flex;align-items:center;justify-content:center;background:#f3f5f5}.slide img{width:100%;height:auto;max-height:72vh;object-fit:contain;display:block}
     .shop-banner{margin:0 18px;overflow:hidden;background:#f3f5f5;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 24px rgba(16,29,52,.07)}.shop-banner img{display:block;width:100%;height:auto;max-height:42vh;object-fit:contain}
+    .shop-proof{display:flex;align-items:center;min-height:38px;margin:12px 18px 8px;padding:8px 10px;color:var(--ink);background:#fff;border:1px solid #bddddd;border-radius:13px;font-size:clamp(6px,1.9vw,9px);font-weight:400;line-height:1.4;white-space:nowrap}
+    .shop-proof+.social-banner{margin-top:0}
+    .shop-proof+.hero-carousel{margin-top:8px}
     .nav-arrow{position:absolute;top:50%;z-index:2;width:39px;height:39px;display:grid;place-items:center;border:1px solid var(--ink);border-radius:50%;background:rgba(255,255,255,.93);color:var(--ink);transform:translateY(-50%)}.nav-arrow.prev{left:12px}.nav-arrow.next{right:12px}
     .dots{position:absolute;right:16px;bottom:16px;z-index:2;display:flex;gap:5px}.dot{width:8px;height:8px;padding:0;border:1px solid var(--ink);border-radius:99px;background:#fff}.dot.active{width:21px;background:var(--ink)}
     .section-pad,.cart-content,.checkout-content,.confirm-content{padding:18px 18px 0}.micro-divider{margin:13px 0;color:#789393;font-size:11px;letter-spacing:.08em;text-align:center}
@@ -57,10 +60,9 @@
     .category-chip{flex:0 0 auto;min-width:76px;max-width:104px;padding:9px 8px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:13px;font-size:10px;line-height:1.25;text-align:center;transition:.18s}.category-chip.active{background:var(--ink);border-color:var(--ink);color:#fff}.category-chip .bubble{width:32px;height:32px;display:grid;place-items:center;margin:0 auto 5px;background:var(--pastel);border-radius:50%;font-size:15px;overflow:hidden}.category-chip .bubble img{width:24px;height:24px;object-fit:contain;border-radius:50%}.category-chip.active .bubble{background:#fff;color:var(--ink)}
     .catalog-head{display:block;margin-top:18px}.catalog-head h1{margin:0;color:var(--ink);font-size:13px;line-height:1.15;letter-spacing:-.04em;font-weight:400}.catalog-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-top:8px}.catalog-head .micro-divider{margin:0;color:#789393;font-size:11px;line-height:1}.catalog-count{align-self:flex-start;margin:0;font-size:11px;color:var(--muted);white-space:nowrap}.catalog-filters{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:6px}.catalog-filter-hint{width:16px;height:18px;display:grid;place-items:center;margin-right:0;padding:0;color:#9aa5ad;background:transparent;border:0;cursor:pointer}.catalog-filter-hint:focus-visible,.catalog-filter:focus-visible{outline:2px solid #789393;outline-offset:2px}.catalog-filter-icon{width:11px;height:11px;display:block}.catalog-filter{min-height:26px;padding:4px 8px;border:1px solid transparent;border-radius:8px;background:transparent;color:#9aa5ad;font:inherit;font-size:9px;line-height:1;font-weight:400;letter-spacing:.01em;cursor:pointer;transition:background .18s,border-color .18s,color .18s,box-shadow .18s}.catalog-filter.available.active{background:#e8f4ee;border-color:#c9e2d4;color:#789393;font-weight:500;box-shadow:0 2px 6px rgba(120,147,147,.18)}.catalog-filter.preorder.active{background:#fce8ef;border-color:#f1d4df;color:#789393;font-weight:500;box-shadow:0 2px 6px rgba(120,147,147,.18)}
     .social-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 18px 0;padding:13px 14px;background:linear-gradient(135deg,#e8f6f6,#fff);border:1px solid #bddddd;border-radius:13px}.social-banner-copy{min-width:0}.social-banner-title{font-size:13px;font-weight:700}.social-banner-text{margin-top:3px;color:var(--muted);font-size:11px}.social-banner-links{display:flex;flex:0 0 auto;gap:7px}.social-banner-link{padding:8px 10px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px;font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap}
-    .product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:10px}.product-card{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 5px 16px rgba(16,29,52,.035);text-align:left;transition:.18s}.product-card:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(16,29,52,.1)}
+    .product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:10px}.product-section-divider{grid-column:1/-1;margin:3px 0;color:#789393;font-size:12px;line-height:1;text-align:center}.product-card{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 5px 16px rgba(16,29,52,.035);text-align:left;transition:.18s}.product-card:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(16,29,52,.1)}
     .thumb{position:relative;aspect-ratio:1/1;background:linear-gradient(145deg,#cfe8e8,#f8fcfc);background-size:cover;background-position:center}.thumb::after{content:"✦ ｡ﾟ•┈ Diah.wts ┈•ﾟ｡ ✦";position:absolute;left:0;right:0;bottom:8px;color:#fff;text-align:center;text-shadow:0 1px 4px #101d34;font-size:9px;letter-spacing:.05em;pointer-events:none}.thumb.sold-out::before{content:"";position:absolute;inset:0;z-index:1;background:rgba(255,255,255,.55);pointer-events:none}.thumb.sold-out::after{z-index:2}.badges{position:absolute;top:7px;left:7px;z-index:3;display:flex;flex-wrap:wrap;gap:4px}.badge{padding:3px 6px;border-radius:7px;background:#fff;color:var(--ink);font-size:9px;font-weight:700;border:1px solid var(--line)}.badge.soldout{background:#101d34;color:#fff;border-color:#101d34}.badge.pre{background:var(--pink)}
     .product-card-body{padding:9px}.product-group{font-size:9px;color:#789393;font-weight:700;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-name{min-height:35px;margin:3px 0 5px;font-size:11px;line-height:1.45;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.product-variant{height:16px;font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-price{margin-top:5px;font-size:13px;font-weight:700}.product-stock{margin-top:4px;font-size:9px;color:var(--muted)}.product-promo{margin-top:9px;padding:8px;color:var(--ink);background:#f4fbfb;border:1px solid #bddddd;border-radius:9px;font-size:9px;line-height:1.45}.product-promo strong{display:block;margin-bottom:3px;font-size:10px}.product-note,.cart-note{display:block;margin-top:6px;color:#9aa5ad;font-size:10px;font-style:italic;line-height:1.45}.cart-note{margin-top:4px}
-    .product-grid-divider{grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:6px;margin:4px 0;color:#9aa5ad;font-size:11px;line-height:1;text-align:center}.product-grid-divider-bow{justify-self:center}
     .empty-products{grid-column:1/-1;padding:34px 14px;color:var(--muted);border:1px dashed var(--line);border-radius:13px;text-align:center;font-size:13px}
     /* Khung "xương" (skeleton) hiện NGAY khi vừa vào trang, trước khi API kịp trả dữ liệu — giúp
        khách thấy bố cục quen thuộc (giống thẻ sản phẩm thật) thay vì màn trống/chữ chờ, cảm giác
@@ -78,10 +80,28 @@
         .bottom-nav button#navHome svg,.bottom-nav button#navProducts svg,.bottom-nav button#navCart svg,.bottom-nav button#navOrders svg{width:17px;height:17px}.bottom-nav button span{display:block;line-height:1.2;font-size:10px!important;letter-spacing:.06em!important;font-weight:400!important;color:var(--muted)!important}.bottom-nav button.active{color:var(--ink)}.bottom-nav button.active span{font-weight:700!important;color:var(--ink)!important}
     .detail-gallery{position:relative;overflow:hidden;width:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:14px;background:var(--pastel);box-shadow:0 10px 24px rgba(16,29,52,.08);touch-action:pan-y}.detail-gallery::after{content:"✦ ｡ﾟ•┈ Diah.wts ┈•ﾟ｡ ✦";position:absolute;left:0;right:0;bottom:11px;z-index:2;color:#fff;text-align:center;text-shadow:0 1px 5px rgba(16,29,52,.65);font-size:10px;letter-spacing:.06em;pointer-events:none}.detail-gallery .slides{height:100%}.detail-gallery .slide img{object-fit:cover}.detail-gallery .nav-arrow{opacity:.92}.detail-gallery .dots{bottom:14px;right:50%;transform:translateX(50%)}.eyebrow{display:inline-flex;margin-top:13px;padding:7px 12px;color:var(--ink);background:linear-gradient(120deg,#e8f6f6,#cfe8e8,#dff3f3,#cfe8e8,#e8f6f6);background-size:300% 300%;animation:holoShift 6s ease infinite;border:1px solid #bddddd;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}.detail-title{margin:13px 0 7px;font-size:29px;line-height:1.18;letter-spacing:-.045em}.rating-line{font-size:13px;color:var(--muted)}.stars{color:var(--ink)}.price{margin:18px 0;font-size:30px;font-weight:700}.choice-block{padding:17px 0;border-top:1px solid var(--line)}.choice-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px;font-size:15px}.choice-head strong{font-weight:700}.choice-stock{color:var(--muted);font-size:13px}.variant-group{margin-bottom:17px}.variant-group:last-child{margin-bottom:0}.variant-group-title{margin-bottom:8px;color:#789393;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:10px 13px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:13px}.chip.selected{color:#fff;background:var(--ink);border-color:var(--ink)}.chip.disabled{opacity:.45;text-decoration:line-through}
     .quantity-row{display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-top:1px solid var(--line);font-size:13px;font-weight:600}.stepper{display:flex;align-items:center;overflow:hidden;border:1px solid var(--ink);border-radius:11px}.stepper button{width:39px;height:38px;display:grid;place-items:center;padding:0;border:0;background:#fff;color:var(--ink);line-height:1}.stepper button svg{display:block}.stepper span{width:36px;height:38px;display:grid;place-items:center;text-align:center;line-height:1}
-    .primary-btn{width:100%;min-height:53px;padding:12px 18px;color:#fff;background:var(--ink);border:1px solid var(--ink);border-radius:12px;font-size:14px;font-weight:600;text-align:center;transition:.18s}.primary-btn:hover{color:var(--ink);background:#fff}.primary-btn:disabled{opacity:.5;cursor:not-allowed}
+    .primary-btn{width:100%;min-height:53px;padding:12px 18px;color:#fff;background:var(--ink);border:1px solid var(--ink);border-radius:12px;font-size:14px;font-weight:600;text-align:center;transition:color .2s ease,background-color .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease}.primary-btn:not(.holo-btn):not(.confirm-secondary-btn):not(:disabled):hover{color:var(--ink)!important;background:#fff!important;border-color:var(--ink)!important;transform:translateY(-1px);box-shadow:0 5px 14px rgba(16,29,52,.12)}.primary-btn:not(.holo-btn):not(.confirm-secondary-btn):not(:disabled):active{transform:translateY(0) scale(.99);box-shadow:0 2px 6px rgba(16,29,52,.1)}.primary-btn:disabled{opacity:.5;cursor:not-allowed}
+    @media(prefers-reduced-motion:reduce){.primary-btn{transition:none}.primary-btn:not(.holo-btn):not(.confirm-secondary-btn):not(:disabled):hover,.primary-btn:not(.holo-btn):not(.confirm-secondary-btn):not(:disabled):active{transform:none}}
     .accordions{margin-top:20px;border-top:1px solid var(--line)}.accordion{border-bottom:1px solid var(--line)}.accordion button{width:100%;min-height:54px;display:flex;justify-content:space-between;align-items:center;border:0;background:transparent;text-align:left;font-size:13px;font-weight:600}.accordion-content{display:none;padding:0 0 15px;color:#777;font-size:12px;line-height:1.7}.accordion.open .accordion-content{display:block}.accordion-content p{margin:0 0 14px}.accordion-content p:last-child{margin-bottom:0}#detailInformation p{margin-bottom:2px}#detailInformation p:last-of-type{margin-bottom:0}.shipping-subheading{display:block;margin:14px 0 0;color:var(--ink);font-size:13px;font-weight:600}.accordion-content > .shipping-subheading:first-child{margin-top:0}.shipping-fee-holo{display:block;margin:6px 0 14px;padding:8px 10px;color:var(--ink);font-size:12px;font-style:normal;line-height:1.55;background:linear-gradient(120deg,#e8f6f6,#cfe8e8,#dff3f3,#cfe8e8,#e8f6f6);background-size:300% 300%;border:1px solid #bddddd;border-radius:11px;animation:holoShift 6s ease infinite}@keyframes holoShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}.rating-line{display:flex;align-items:center;gap:8px}
     .cart-card,.summary,.form-card,.confirm-card{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 5px 16px rgba(16,29,52,.035)}.form-card h2{margin:0 0 15px;color:var(--ink);font-size:23px!important;font-weight:600;line-height:1.5}.cart-card{display:flex;gap:12px;padding:12px;margin-bottom:11px}.cart-thumb{position:relative;width:76px;height:76px;flex:0 0 76px;border:1px solid var(--line);border-radius:10px;background:var(--pastel);background-size:cover;background-position:center}.cart-thumb::after{content:"Diah.wts";position:absolute;left:0;right:0;bottom:6px;color:#fff;text-align:center;text-shadow:0 1px 4px #101d34;font-size:8px;font-weight:600;letter-spacing:.04em;pointer-events:none}.cart-info{flex:1;min-width:0}.cart-name{font-size:13px;font-weight:600}.cart-variant{margin:4px 0 7px;color:var(--muted);font-size:11px}.cart-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}.cart-meta strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cart-row-head{display:flex;justify-content:space-between;gap:8px}.delete-btn{color:var(--muted);border:0;background:transparent}.small-stepper{flex:0 0 auto}.small-stepper .stepper{border-radius:9px}.small-stepper .stepper button{width:30px;height:30px}.small-stepper .stepper span{width:26px;height:30px;font-size:12px}
-    .cart-group-title{margin:18px 0 8px;color:#789393;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.cart-group-title:first-child{margin-top:0}
+    .combo-offer{width:97%;margin:2px auto 14px;padding:24px 0 0;background:transparent;border:0;border-radius:0}
+    .combo-offer::after{content:"˚.⋆ ⋆.˚";display:block;margin:22px 0 0;color:#9aa5ad;font-size:11px;letter-spacing:.14em;text-align:center}
+    .combo-offer-message{margin:0 0 8px;color:var(--ink);font-size:12px;font-weight:600;line-height:1.5}
+    .combo-progress{height:4px;overflow:hidden;background:rgba(16,43,70,.12);border-radius:99px}
+    .combo-progress-fill{width:0;height:100%;background:var(--ink);border-radius:inherit;transition:width .18s ease-out}
+    .combo-progress-label{display:block;margin:4px 0 7px;color:var(--muted);font-size:9px;text-align:right}
+    .combo-suggestions{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-ms-overflow-style:none}
+    .combo-suggestions::-webkit-scrollbar{display:none}
+    .combo-suggestion{flex:0 0 min(82%,250px);display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:9px;align-items:center;padding:8px;background:linear-gradient(135deg,#e8f6f6,#fff);border:1px solid #bddddd;border-radius:11px}
+    .combo-suggestion-image{width:48px;height:48px;object-fit:cover;background:var(--pastel);border-radius:8px}
+    .combo-suggestion-info{min-width:0}
+    .combo-suggestion-name{overflow:hidden;color:var(--ink);font-size:12px;font-weight:700;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+    .combo-suggestion-version{overflow:hidden;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+    .combo-suggestion-price{margin-top:4px;color:var(--ink);font-size:11px;font-weight:600;line-height:1.3}
+    .combo-suggestion-button{min-height:34px;padding:0 9px;color:var(--ink);background:#fff;border:1px solid #c8d8d8;border-radius:9px;font-size:11px;font-weight:600;white-space:nowrap;transition:background .18s,border-color .18s,color .18s}
+    .combo-suggestion-button:hover{color:#fff;background:var(--ink);border-color:var(--ink)}
+    @media(prefers-reduced-motion:reduce){.combo-progress-fill{transition:none}}
+    .cart-group-title{margin:18px 0 6px;color:#789393;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.cart-group-title:first-child{margin-top:0}
     .order-content{padding:18px}.order-intro{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.55}.order-results{display:grid;gap:12px}.order-banner{padding:15px;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 5px 16px rgba(16,29,52,.035)}.order-banner-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.order-code{font-size:15px;font-weight:700}.order-date{color:var(--muted);font-size:11px;text-align:right}.order-badges{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.order-badge{display:inline-flex;padding:5px 8px;border-radius:999px;background:var(--pastel);font-size:10px;font-weight:600}.order-badge.payment{background:var(--pink)}.order-brief{margin:0;color:var(--ink);font-size:12px;line-height:1.55}.order-meta{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);display:grid;gap:7px;color:var(--muted);font-size:11px}.order-meta strong{color:var(--ink);font-weight:600}.order-link{color:var(--ink);font-weight:600;text-decoration:underline;word-break:break-all}.order-proof{display:block;margin-top:9px;max-width:100%;max-height:180px;border-radius:9px;border:1px solid var(--line);object-fit:contain}.order-state{padding:34px 15px;color:var(--muted);border:1px dashed var(--line);border-radius:13px;text-align:center;font-size:13px}.order-state.error{color:#a73049;background:#fff4f6;border-color:#f0bbc7}.order-state-main{display:block;margin-bottom:6px}.order-state-sub{display:block;font-size:11px;opacity:.85;margin-bottom:4px}.order-state-tip{display:block;font-size:11px;color:#a8768f}.order-updated-banner{margin:0 0 14px;padding:9px 12px;background:linear-gradient(135deg,#e8f6f6,#fff);border:1px solid #bddddd;border-radius:11px;color:var(--ink);font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:.18s}.order-updated-banner:hover{background:linear-gradient(135deg,#dff3f3,#f7fbfb)}.order-updated-banner .order-updated-text{display:flex;align-items:center;gap:6px}.order-status-group{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:11px;background:var(--pastel)}.order-status-group .order-status-label{font-size:10px;font-weight:700}.order-status-group .order-status-brief{font-size:10px;color:var(--muted)}.order-status-group.payment{background:var(--pink)}.order-status-group.status-pending{background:#fbdfe3}.order-status-group.status-pending .order-status-label{color:#a73049}.order-status-group.status-pending .order-status-brief{color:#a73049}.order-status-group.status-mid{background:#fdf1c7}.order-status-group.status-mid .order-status-label{color:#8a6714}.order-status-group.status-mid .order-status-brief{color:#8a6714}.order-status-group.status-done{background:#dcf3e3}.order-status-group.status-done .order-status-label{color:#1f7a4d}.order-status-group.status-done .order-status-brief{color:#1f7a4d}.order-contact{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);display:grid;gap:6px}.order-contact-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.order-contact-head strong{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.order-contact-line{display:flex;gap:6px;color:var(--muted);font-size:11px}.order-contact-line strong{color:var(--ink);font-weight:600}.order-edit-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font-size:11px;font-weight:600}.order-edit-btn svg{width:12px;height:12px}.order-shortfall{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);font-size:12px;color:var(--muted)}.order-shortfall strong{color:var(--ink);font-weight:700}.order-pay-btn{display:block;width:100%;margin-top:9px;padding:14px 12px;border:1px solid #bddddd;border-radius:13px;background:linear-gradient(120deg,#e8f6f6,#cfe8e8,#dff3f3,#cfe8e8,#e8f6f6);background-size:300% 300%;animation:holoShift 6s ease infinite;color:var(--ink);font-size:13px;font-weight:700;text-align:center;cursor:pointer}.order-pay-btn:active{opacity:.85}.order-updated-log{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted);line-height:1.6}.order-updated-log strong{color:var(--ink)}
     .summary{margin-top:16px;padding:16px}.summary-row{display:flex;justify-content:space-between;padding:7px 0;color:var(--muted);font-size:13px}.summary-row.total{margin-top:8px;padding-top:14px;color:var(--ink);border-top:1px dashed var(--line);font-size:16px;font-weight:600}.shipping-note{margin:16px 0 24px;padding:0 1px;color:var(--muted);font-size:11px;font-style:italic;line-height:1.5;text-align:center}.shipping-note-link{color:var(--ink);font-weight:600;text-decoration:underline}.empty{padding:52px 15px;color:var(--muted);text-align:center}.empty::before{content:"˚.⋆ ⋆.˚";display:block;margin:-20px 0 30px;color:#789393;font-size:13px;letter-spacing:.14em}.empty-icon{width:66px;height:66px;display:grid;place-items:center;margin:0 auto 15px;background:var(--pastel);border:1px solid var(--line);border-radius:50%}.empty h2{margin:0 0 7px;color:var(--ink);font-size:22px}.empty p{margin:0 0 10px;font-size:13px}
     .promo-banner{display:none;margin:14px 0;padding:12px 13px;color:var(--ink);background:linear-gradient(120deg,#e8f6f6,#cfe8e8,#dff3f3,#cfe8e8,#e8f6f6);background-size:300% 300%;animation:holoShift 6s ease infinite;border:1px solid #bddddd;border-radius:13px;font-size:12px;line-height:1.55}.promo-banner.show{display:block}.promo-banner strong,.promo-banner .promo-line{display:grid;align-items:start}.promo-banner strong{grid-template-columns:20px minmax(0,1fr);column-gap:0;margin-bottom:4px;font-size:13px}.promo-banner .promo-line{grid-template-columns:10px minmax(0,1fr);column-gap:4px}.promo-banner .promo-bullet,.promo-banner .promo-icon{display:block}.promo-banner .promo-bullet{text-align:center;line-height:1.55}.promo-album-group + .promo-album-group{margin-top:16px;padding-top:12px;border-top:1px solid rgba(189,221,221,.75)}
@@ -111,6 +131,7 @@
     <section id="homeView" class="view active" aria-label="Sản phẩm">
      <div class="section-heading">Giới thiệu shop</div>
      <div class="shop-banner" aria-label="Giới thiệu shop"><img src="home-banner-3.png" alt=""></div>
+     <div class="shop-proof">🥂 Shopee Yêu thích · Hơn 5.000 sản phẩm đã bán · Hơn 1.500 đánh giá · 5.0 ★</div>
      <div class="social-banner" aria-label="Liên kết mạng xã hội của shop">
       <div class="social-banner-copy"><div class="social-banner-title">Theo dõi</div></div>
       <div class="social-banner-links"><a class="social-banner-link" href="https://www.facebook.com/profile.php?id=61567885648435" target="_blank" rel="noopener">Facebook</a><a class="social-banner-link" href="https://shopee.vn/diah.wts" target="_blank" rel="noopener">Shopee</a></div>
@@ -153,8 +174,8 @@
        <a class="footer-link" href="https://www.facebook.com/profile.php?id=61567885648435" target="_blank" rel="noopener noreferrer">Facebook</a>
        <a class="footer-link" href="https://shopee.vn/diah.wts" target="_blank" rel="noopener noreferrer">Shopee</a>
        <a class="footer-link" href="https://www.google.com/maps/search/?api=1&query=Keangnam+Landmark+72%2C+H%C3%A0+N%E1%BB%99i" target="_blank" rel="noopener noreferrer">Địa chỉ</a>
-       <a class="footer-link" href="bao-mat.html">Dữ liệu &amp; bảo mật</a>
-       <a class="footer-link" href="faq.html">Hướng dẫn &amp; FAQ</a>
+       <a class="footer-link" href="bao-mat.html">Dữ liệu &amp; Bảo mật</a>
+       <a class="footer-link" href="faq.html">Hướng dẫn đặt hàng</a>
        <a class="footer-link" href="van-chuyen-doi-tra.html">Giao hàng &amp; Đổi trả</a>
       </div>
     </div>
@@ -203,6 +224,14 @@
      </div>
      <div class="cart-content">
       <div id="cartItems"></div>
+      <section id="comboOffer" class="combo-offer" aria-label="Ưu đãi combo 3 sản phẩm" hidden>
+       <p id="comboOfferMessage" class="combo-offer-message" role="status" aria-live="polite" aria-atomic="true"></p>
+       <div class="combo-progress" role="progressbar" aria-label="Tiến độ ưu đãi combo 3 sản phẩm" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><div id="comboProgressFill" class="combo-progress-fill"></div></div>
+       <span id="comboProgressLabel" class="combo-progress-label"></span>
+       <div id="comboSuggestionsWrap" hidden>
+        <div id="comboSuggestions" class="combo-suggestions"></div>
+       </div>
+      </section>
       <div id="cartEmpty" class="empty">
        <div class="empty-icon"><i data-lucide="shopping-bag" width="27"></i>
        </div>
@@ -252,7 +281,9 @@
         </div>
        </div>
        <div class="form-card">
-        <label class="payment-choice"><input type="radio" name="shipping_provider" value="SPX" checked><span>Ship SPX nhận hàng sau 1-4 ngày <small class="field-hint">Phí ship: khoảng 14.000–19.000đ cho đơn 1kg (+5.000đ/kg tiếp theo, đơn trên 3.000.000đ SPX phụ thu 25.000đ hàng giá trị cao)</small></span></label><label class="payment-choice"><input type="radio" name="shipping_provider" value="Be/Grab"><span>Ship Be/Grab nội thành Hà Nội nhận hàng ngay</span></label><label class="payment-choice"><input type="radio" name="shipping_provider" value="Trực tiếp"><span>Giao dịch trực tiếp gần Keangnam, Landmark 72 Hà Nội</span></label>
+        <label class="payment-choice"><input type="radio" name="shipping_provider" value="SPX" checked><span>Ship SPX nhận hàng sau 1-4 ngày <small class="field-hint">Phí ship: khoảng 14.000–19.000đ cho đơn 1kg (+5.000đ/kg tiếp theo, đơn trên 3.000.000đ SPX phụ thu 25.000đ hàng giá trị cao).</small></span></label>
+        <label class="payment-choice"><input type="radio" name="shipping_provider" value="Be/Grab"><span>Ship Be/Grab nội thành Hà Nội nhận hàng ngay <small class="field-hint">Phí ship: ~25.000đ bán kính 5km, nhắn Facebook nếu cần shop tra ship trước, hoặc bạn đẹp có thể tự book ship.</small></span></label>
+        <label class="payment-choice"><input type="radio" name="shipping_provider" value="Trực tiếp"><span>Giao dịch trực tiếp gần Keangnam, Landmark 72 Hà Nội <small class="field-hint">Thường từ 2~4h chiều các ngày, nhắn Facebook để hẹn trước.</small></span></label>
        </div>
        <div id="deliveryFields" class="form-card" hidden>
         <div class="form-group"><label for="customerName">Tên người nhận</label><input id="customerName" type="text" autocomplete="name"></div>
@@ -261,7 +292,7 @@
        </div>
        <div class="form-card"><label class="payment-choice"><input type="radio" name="payment" value="Chuyển khoản" checked><span>Chuyển khoản</span></label>
        </div>
-       <div data-template-id="demo-notice" class="canva-banner notice" style="background: rgb(247, 251, 251); color: rgb(16, 29, 52); font-weight: 400; font-style: normal; font-size: 15px;">Đơn hàng của bạn sẽ được lưu vào Google Sheet để cửa hàng xử lý.</div>
+       <div data-template-id="demo-notice" class="canva-banner notice" style="background: rgb(247, 251, 251); color: rgb(16, 29, 52); font-weight: 400; font-style: normal; font-size: 12px;">Đơn hàng của bạn sẽ được lưu vào Google Sheet để xử lý. Sau khi xác nhận đơn, mã QR chuyển khoản sẽ hiển thị.</div>
        <label class="policy-consent" for="policyConsent"><input id="policyConsent" type="checkbox" required><span>Tôi đã đọc và đồng ý với <a href="bao-mat.html" target="_blank" rel="noopener noreferrer">Chính sách Bảo mật</a> và <a href="van-chuyen-doi-tra.html" target="_blank" rel="noopener noreferrer">Giao hàng &amp; Đổi trả</a>.</span></label>
        <button data-template-id="place-order-button" id="placeOrderBtn" class="canva-button primary-btn" type="submit" style="background: rgb(16, 29, 52); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">Xác nhận đơn hàng 🎶🤍</button>
       </form>
@@ -877,8 +908,8 @@
       return clause.type==="count" && (!scope || scope.includes("bat ki") || scope.includes("bat ky"));
     }
     function comboDiscount(){
-      const readyQuantity=cart.reduce((sum,item)=>!item.preorder?sum+item.quantity:sum,0);
-      const baseDiscount=readyQuantity>=3?10000:0;
+      const readyProductCount=cart.filter(item=>!item.preorder && item.quantity>0).length;
+      const baseDiscount=readyProductCount>=3?10000:0;
       const seen={}, briefs=[];
       cart.filter(item=>!item.preorder).forEach(product=>{
         const brief=String(product.comboBrief || "").trim();
@@ -997,9 +1028,7 @@
       const sections=[availableProducts,preorderProducts,soldOutProducts].filter(section=>section.length);
       sections.forEach((section,sectionIndex)=>{
         if(sectionIndex>0){
-          const divider=document.createElement("div");divider.className="product-grid-divider";divider.setAttribute("role","separator");
-          const bow=document.createElement("span");bow.className="product-grid-divider-bow";bow.textContent="𐙚";divider.appendChild(bow);
-          grid.appendChild(divider);
+          const divider=document.createElement("div");divider.className="product-section-divider";divider.setAttribute("aria-hidden","true");divider.textContent="—𐙚—";grid.appendChild(divider);
         }
         section.forEach(productVariants=>{
           const product=productVariants[0];
@@ -1165,6 +1194,107 @@
       }).filter(item=>item && item.quantity>0);
       localStorage.setItem("diah-cart",JSON.stringify(cart));
     }
+    function renderComboOffer(){
+      const offer=document.getElementById("comboOffer");
+      const isReadyCart=cart.length>0 && cart.every(item=>!item.preorder);
+      offer.hidden=!isReadyCart;
+      if(!isReadyCart)return;
+
+      const readyProductCount=cart.filter(item=>!item.preorder && item.quantity>0).length;
+      const remaining=Math.max(0,3-readyProductCount);
+      const message=remaining===0
+        ?"🥂 Bạn đã được giảm ngay 10.000đ!"
+        :`🥂 Thêm nhanh ${remaining===1?"1 sản phẩm":`${remaining} sản phẩm`} để giảm ngay 10.000đ.`;
+      document.getElementById("comboOfferMessage").textContent=message;
+
+      const progressValue=Math.min(readyProductCount,3);
+      const progress=document.querySelector("#comboOffer .combo-progress");
+      progress.setAttribute("aria-valuenow",String(progressValue));
+      document.getElementById("comboProgressFill").style.width=`${progressValue/3*100}%`;
+      document.getElementById("comboProgressLabel").textContent=`${progressValue}/3`;
+      const suggestionsWrap=document.getElementById("comboSuggestionsWrap");
+      const suggestions=document.getElementById("comboSuggestions");
+      suggestions.replaceChildren();
+      const cartGroups=new Set(cart.map(item=>normalizeText(item.group)).filter(Boolean));
+      const availableProducts=remaining>0
+        ?products.filter(product=>!product.preorder && Number(product.stock)>0 && !cart.some(item=>String(item.id)===String(product.id)))
+        :[];
+      const sameAlbumOtherVersion=product=>cart.some(item=>
+        normalizeText(item.album)===normalizeText(product.album) &&
+        (normalizeText(item.specificationName || item.specification)!==normalizeText(product.specificationName || product.specification))
+      );
+      const sameAlbumProducts=availableProducts.filter(sameAlbumOtherVersion);
+      const sameGroupProducts=availableProducts.filter(product=>
+        cartGroups.has(normalizeText(product.group)) && !sameAlbumOtherVersion(product)
+      );
+      const otherGroupProducts=availableProducts.filter(product=>
+        !cartGroups.has(normalizeText(product.group)) && !sameAlbumOtherVersion(product)
+      );
+      const candidates=sameAlbumProducts.length>=4
+        ?sameAlbumProducts
+        :[
+          ...sameAlbumProducts,
+          ...sameGroupProducts.slice(0,4-sameAlbumProducts.length),
+          ...otherGroupProducts.slice(0,Math.max(0,4-sameAlbumProducts.length-sameGroupProducts.length))
+        ];
+      suggestionsWrap.hidden=candidates.length===0;
+
+      candidates.forEach(product=>{
+        const card=document.createElement("article");
+        card.className="combo-suggestion";
+        const image=document.createElement("img");
+        image.className="combo-suggestion-image";
+        image.alt="";
+        image.loading="lazy";
+        if(product.image)image.src=safeUrl(product.image);
+
+        const info=document.createElement("div");
+        info.className="combo-suggestion-info";
+        const name=document.createElement("div");
+        name.className="combo-suggestion-name";
+        name.textContent=product.album || product.group || "Sản phẩm";
+        const version=document.createElement("div");
+        version.className="combo-suggestion-version";
+        version.textContent=product.specificationName || product.specification || product.type || "";
+        const price=document.createElement("div");
+        price.className="combo-suggestion-price";
+        price.textContent=money(product.price);
+        info.append(name,version,price);
+
+        const button=document.createElement("button");
+        button.className="combo-suggestion-button";
+        button.type="button";
+        button.textContent="+ Thêm";
+        button.setAttribute("aria-label",`Thêm ${product.album || "sản phẩm"} vào giỏ hàng`);
+        button.addEventListener("click",()=>addComboSuggestion(product.id));
+        card.append(image,info,button);
+        suggestions.appendChild(card);
+      });
+    }
+    function addComboSuggestion(productId){
+      const product=products.find(item=>String(item.id)===String(productId));
+      if(!product || product.preorder || Number(product.stock)<=0){
+        showToast("Sản phẩm này hiện đã hết hàng.");
+        return;
+      }
+      if(cart.some(item=>item.preorder)){
+        showToast("Không thể gộp đơn sản phẩm có sẵn và Pre-order vào thanh toán chung. Xin hãy tách đơn.");
+        return;
+      }
+
+      const existing=cart.find(item=>String(item.id)===String(product.id));
+      if(existing){
+        if(existing.quantity>=Number(product.stock)){
+          showToast("Sản phẩm này đã đạt số lượng tối đa trong kho.");
+          return;
+        }
+        existing.quantity+=1;
+      }else{
+        cart.push({...product,quantity:1,availability:product.availability,shippingDate:product.shippingDate});
+      }
+      updateCartUI();
+      showToast("Đã thêm sản phẩm vào giỏ hàng.");
+    }
     function updateCartUI(){
       const items=document.getElementById("cartItems");items.replaceChildren();const count=cart.reduce((s,i)=>s+i.quantity,0);document.getElementById("cartBadge").textContent=count;
       document.getElementById("cartEmpty").style.display=cart.length?"none":"block";document.getElementById("cartSummary").style.display=cart.length?"block":"none";
@@ -1189,6 +1319,7 @@
         info.querySelector(".delete-btn").onclick=()=>{cart.splice(index,1);updateCartUI()};info.querySelector(".minus").onclick=()=>changeCartQty(index,-1);info.querySelector(".plus").onclick=()=>changeCartQty(index,1);card.append(thumb,info);items.appendChild(card);
        });
       });
+      renderComboOffer();
       const cartTotal=total();
       document.getElementById("subtotalAmount").textContent=money(subtotal());document.getElementById("comboDiscountAmount").textContent=money(comboDiscount());document.getElementById("totalAmount").textContent=money(cartTotal);lucide.createIcons();
     }
