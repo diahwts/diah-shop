@@ -20,8 +20,8 @@
     @keyframes holoShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
     .app-shell{width:100%;max-width:470px;min-height:100vh;margin:auto;position:relative;background:var(--white);border-inline:1px solid var(--line)}
-    .page-head{display:flex;gap:12px;align-items:center;padding:14px 18px;position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
-    .back-btn{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:11px;transition:.18s;text-decoration:none}
+    .page-head{display:flex;gap:12px;align-items:center;padding:14px 18px;position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);border-bottom:0;backdrop-filter:blur(12px)}
+    .back-btn{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;color:var(--ink);border-radius:20px;transition:.18s;text-decoration:none;background:#f3fafa;border:0;box-shadow:none}
     .back-btn:hover{color:#fff;background:var(--ink);border-color:var(--ink)}
     .page-head h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
 
@@ -32,7 +32,7 @@
     .doc-title{display:grid;grid-template-columns:22px minmax(0,1fr);column-gap:2px;align-items:start;margin-bottom:8px;font-size:13px;font-weight:700;letter-spacing:.01em}
     .doc-title .ico{display:block;font-size:15px;line-height:1.3}
 
-    .doc-card{padding:13px 14px;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 5px 16px rgba(16,29,52,.035);font-size:13px;line-height:1.6}
+    .doc-card{padding:13px 14px;border-radius:20px;font-size:13px;line-height:1.6;background:#f3fafa;border:0;box-shadow:none}
     .doc-card p{margin:0 0 8px}.doc-card p:last-child{margin-bottom:0}
 
     .doc-list{display:grid;gap:7px}
@@ -41,12 +41,12 @@
     .doc-item strong{color:var(--ink)}
     .doc-item span.muted{color:var(--muted)}
 
-    .doc-highlight{padding:13px 14px;color:var(--ink);background:linear-gradient(120deg,#e8f6f6,#cfe8e8,#dff3f3,#cfe8e8,#e8f6f6);background-size:300% 300%;animation:holoShift 6s ease infinite;border:1px solid #bddddd;border-radius:13px;font-size:12.5px;line-height:1.55}
+    .doc-highlight{padding:13px 14px;color:var(--ink);border-radius:20px;font-size:12.5px;line-height:1.55;background:#f3fafa;border:0;box-shadow:none}
     .doc-highlight .doc-title{margin-bottom:8px}
 
     .lang-divider{margin:28px 0 20px;padding-top:20px;border-top:1px dashed var(--line);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#789393;text-align:center}
 
-    .contact-footer{display:flex;align-items:center;gap:8px;margin:24px 0 24px;padding:12px 14px;background:linear-gradient(135deg,#e8f6f6,#fff);border:1px solid #bddddd;border-radius:12px;font-size:12.5px;color:var(--ink)}
+    .contact-footer{display:flex;align-items:center;gap:8px;margin:24px 0 24px;padding:12px 14px;border-radius:20px;font-size:12.5px;color:var(--ink);background:#f3fafa;border:0;box-shadow:none}
 
     a{color:var(--ink)}
   </style>
