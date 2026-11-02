@@ -1681,8 +1681,6 @@
         const customerName=orderField(row,["customer_name"],"—");
         const contactPhone=orderField(row,["phone"],"—");
         const address=orderField(row,["address"],"—");
-        const contactEmail=String(pick(row,["email"])||"").trim();
-        const facebookName=orderField(row,["facebook_name"],"—");
         const updatedLog=pick(row,["updated_at"]);
         const items=Array.isArray(row.items)?row.items:[];
         const orderBrief=pick(row,["order_brief"]);
@@ -1741,8 +1739,6 @@
           <div class="ol-divider"></div>
           <h3 class="ol-label">Thông tin đơn hàng</h3>
           <div class="ol-rows">
-            <div class="ol-row"><span>Tên Facebook</span><strong>${escapeHTML(facebookName)}</strong></div>
-            <div class="ol-row"><span>Email</span><strong>${contactEmail?escapeHTML(contactEmail):'<span class="ol-muted">Chưa cập nhật</span>'}</strong></div>
             <div class="ol-row"><span>Sản phẩm</span><strong>${escapeHTML(itemsText)}</strong></div>
             <div class="ol-row"><span>Tổng thanh toán</span><strong>${money(total)}</strong></div>
             <div class="ol-row"><span>Vận chuyển</span><strong>${shippingValue}</strong></div>
