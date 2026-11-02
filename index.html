@@ -497,7 +497,7 @@
         </div>
         <div class="form-grid">
          <div class="form-group"><label for="phone">Số điện thoại *</label><input id="phone" type="tel" inputmode="tel" required></div>
-         <div class="form-group"><label for="email">Email</label><input id="email" type="email"></div>
+         <div class="form-group"><label for="email">Email *</label><input id="email" type="email" autocomplete="email" required></div>
         </div>
        </div>
        <div class="form-card">
@@ -561,7 +561,7 @@
      <div class="form-group"><label for="editOrderFacebookName">Tên Facebook *</label><input id="editOrderFacebookName" type="text"></div>
      <div class="form-grid">
       <div class="form-group"><label for="editOrderPhone">Số điện thoại</label><input id="editOrderPhone" type="text" inputmode="text"></div>
-      <div class="form-group"><label for="editOrderEmail">Email</label><input id="editOrderEmail" type="email"></div>
+      <div class="form-group"><label for="editOrderEmail">Email *</label><input id="editOrderEmail" type="email" autocomplete="email"></div>
      </div>
      <label class="payment-choice"><input type="radio" name="edit_shipping_provider" value="SPX"><span>Ship SPX nhận hàng sau 1-4 ngày</span></label>
      <label class="payment-choice"><input type="radio" name="edit_shipping_provider" value="Be/Grab"><span>Ship Be/Grab nội thành Hà Nội nhận hàng ngay</span></label>
@@ -1681,6 +1681,8 @@
         const customerName=orderField(row,["customer_name"],"—");
         const contactPhone=orderField(row,["phone"],"—");
         const address=orderField(row,["address"],"—");
+        const contactEmail=String(pick(row,["email"])||"").trim();
+        const facebookName=orderField(row,["facebook_name"],"—");
         const updatedLog=pick(row,["updated_at"]);
         const items=Array.isArray(row.items)?row.items:[];
         const orderBrief=pick(row,["order_brief"]);
@@ -1739,6 +1741,8 @@
           <div class="ol-divider"></div>
           <h3 class="ol-label">Thông tin đơn hàng</h3>
           <div class="ol-rows">
+            <div class="ol-row"><span>Tên Facebook</span><strong>${escapeHTML(facebookName)}</strong></div>
+            <div class="ol-row"><span>Email</span><strong>${contactEmail?escapeHTML(contactEmail):'<span class="ol-muted">Chưa cập nhật</span>'}</strong></div>
             <div class="ol-row"><span>Sản phẩm</span><strong>${escapeHTML(itemsText)}</strong></div>
             <div class="ol-row"><span>Tổng thanh toán</span><strong>${money(total)}</strong></div>
             <div class="ol-row"><span>Vận chuyển</span><strong>${shippingValue}</strong></div>
@@ -1937,7 +1941,8 @@
         payment_method:form.querySelector('input[name="edit_payment_method"]:checked')?.value || "Chuyển khoản"
       };
       if(!fields.facebook_name){showEditOrderError("Vui lòng nhập Tên Facebook.");return}
-      if(fields.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showEditOrderError("Email chưa đúng định dạng.");return}
+      if(!fields.email){showEditOrderError("Vui lòng nhập Email.");return}
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showEditOrderError("Email chưa đúng định dạng.");return}
       const button=form.querySelector('button[type="submit"]');button.disabled=true;setLoading(true,"Đang lưu thông tin…","Kết nối thường mất 5 giây.");
       let result;
       try{
@@ -1991,7 +1996,8 @@
       if(!orderItems.length){showFormError("Nhóm sản phẩm này không có sản phẩm trong giỏ hàng.");return}
       if(!fields.facebook_name){showFormError("Vui lòng nhập Tên Facebook.");return}
       if(!fields.phone){showFormError("Vui lòng nhập số điện thoại.");return}
-      if(fields.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showFormError("Email chưa đúng định dạng.");return}
+      if(!fields.email){showFormError("Vui lòng nhập Email.");return}
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)){showFormError("Email chưa đúng định dạng.");return}
       const missing=missingBundleRequirements();
       if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
       if(!paymentConfirmed){
