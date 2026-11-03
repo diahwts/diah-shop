@@ -1012,7 +1012,7 @@
       return `Mua ${baseName} kèm 1 trong các ${specification}(${alternatives.join(" hoặc ")}) ${amount ? `giảm ${amount[1]}` : ""}`.replace(/\s+/g," ").trim();
     }
     function promotionMarkup(list){
-      return `<strong><span class="promo-icon">🎁</span><span>Ưu đãi combo</span></strong>${list.map(text=>`<div class="promo-line"><span class="promo-bullet">•</span><span>${escapeHTML(text)}</span></div>`).join("")}`;
+      return `<strong><span class="promo-icon">🎁</span><span>Ưu đãi</span></strong>${list.map(text=>`<div class="promo-line"><span class="promo-bullet">•</span><span>${escapeHTML(text)}</span></div>`).join("")}`;
     }
     function renderPromotions(){
       const {albumNames,albumBriefs,globalBriefs}=bannerPromotionGroups();
@@ -1060,8 +1060,8 @@
     function renderDetailPromotions(product){
       const banner=document.getElementById("detailPromoBanner");
       const variants=products.filter(candidate=>candidate.group===product.group && candidate.album===product.album);
-      const groups=bannerPromotionGroups();
-      const list=[...new Set([...groups.globalBriefs,...(groups.albumBriefs[product.album] || [])].map(brief=>promotionText(brief,variants)))];
+      // Chỉ hiện đúng nội dung cột Banner Brief của chính sản phẩm (các phân loại cùng album) — không tự thêm ưu đãi chung.
+      const list=[...new Set(variants.flatMap(item=>parseBannerTexts(item.bannerBrief)).map(brief=>promotionText(brief,variants)).filter(Boolean))];
       banner.innerHTML=list.length ? promotionMarkup(list) : "";
       banner.classList.toggle("show",list.length>0);
     }
