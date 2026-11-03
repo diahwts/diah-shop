@@ -799,7 +799,7 @@
         const comboBrief=pick(row,["comboBrief","Combo Brief","Promo Brief","Khuyến mãi","Combo"]);
         const bannerBrief=pick(row,["bannerBrief","Banner Brief","Nội dung banner","Banner"]);
         const bundleBrief=pick(row,["bundleBrief","Kèm brief","Kem brief","Kèm","Bundle Brief"]);
-        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate};
+        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate,deposit:Math.max(0,Number(row.deposit)||0),freeship:Boolean(row.freeship)};
       }).filter(Boolean);
     }
 
