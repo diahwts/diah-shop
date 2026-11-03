@@ -186,6 +186,8 @@
     .avail__thumb{position:absolute;top:4px;left:0;height:32px;border-radius:999px;background:#fff;box-shadow:0 6px 18px -6px rgba(120,147,147,.22);opacity:0;transform:translateX(0) scale(.92);pointer-events:none;transition:transform 340ms cubic-bezier(.32,.72,0,1),width 340ms cubic-bezier(.32,.72,0,1),opacity 200ms ease}
     .avail__thumb.is-on{opacity:1}
     .icon-btn[hidden]{display:none}
+    #variantChips.need-pick{animation:needPick .9s ease}
+    @keyframes needPick{0%,100%{box-shadow:none}30%,70%{box-shadow:0 0 0 2px #d6779d;border-radius:14px}}
     .avail__btn{position:relative;height:32px;padding:0 8px;white-space:nowrap;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:color 200ms ease,transform 100ms ease-out}
     .avail__btn--icon{width:34px;padding:0}
     .avail__btn--icon svg{width:14px;height:14px;display:block}
@@ -606,6 +608,7 @@
     // dùng order_id này làm khoá chống trùng: nếu đơn với đúng ID này đã lưu rồi thì trả về kết
     // quả cũ thay vì tạo thêm dòng mới, nên việc thử lại luôn AN TOÀN, không lo tạo đơn trùng.
     const ORDER_REQUEST_KEY = "diah-order-request-v1";
+    let detailChosen = false; // khách đã bấm chọn 1 phân loại chưa (mở trang: chưa chọn → giá dạng khoảng, ảnh bìa)
     let detailQty = 1, slideIndex = 0, detailSlideIndex = 0, lastOrder = null, lastSync = null, pendingOrderData = null;
     // Tự động thử tải lại sản phẩm khi lần gọi CHÍNH (không phải bước kiểm tra tồn kho nền) thất
     // bại sau khi đã hết số lần thử lại bên trong fetchWithRetry — KHÔNG bắt khách phải tự bấm
@@ -800,7 +803,7 @@
         const comboBrief=pick(row,["comboBrief","Combo Brief","Promo Brief","Khuyến mãi","Combo"]);
         const bannerBrief=pick(row,["bannerBrief","Banner Brief","Nội dung banner","Banner"]);
         const bundleBrief=pick(row,["bundleBrief","Kèm brief","Kem brief","Kèm","Bundle Brief"]);
-        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate,deposit:Math.max(0,Number(row.deposit)||0),depositDue:String(row.depositDue||"").trim(),freeship:Boolean(row.freeship)};
+        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate,deposit:Math.max(0,Number(row.deposit)||0),ownImage:String(row.ownImage||"").trim(),depositDue:String(row.depositDue||"").trim(),freeship:Boolean(row.freeship)};
       }).filter(Boolean);
     }
 
@@ -1477,21 +1480,27 @@
     }
     function openProduct(product){
       selectedProduct=product; const variants=products.filter(p=>p.group===product.group && p.album===product.album);
-      selectedVariant=variants.find(p=>p.id===product.id && p.stock>0) || variants.find(p=>p.stock>0) || variants[0];detailQty=1;renderDetail();showView("detail");
+      selectedVariant=variants.find(p=>p.id===product.id && p.stock>0) || variants.find(p=>p.stock>0) || variants[0];detailQty=1;detailChosen=false;
+      document.getElementById("detailGallery").dataset.album="";renderDetail();showView("detail");
     }
     function renderDetail(){
       if(!selectedVariant) return;
       const item=selectedVariant, variants=products.filter(p=>p.group===item.group && p.album===item.album);
-      renderDetailGallery(item);
+      const gallery=document.getElementById("detailGallery");
+      if(gallery.dataset.album!==`${item.group}\u0000${item.album}`) renderDetailGallery(item);
       document.getElementById("detailTag").textContent=`Diah.wts · ${item.group}`;
       document.getElementById("detailTitle").textContent=`✦ ${item.album} ✦`;
       document.getElementById("shippingStatus").textContent=item.preorder ? "Pre-order" : "Có sẵn · Ship trong ngày ᯓ";
       const detailPrice=document.getElementById("detailPrice");
       const discountPercent=item.originalPrice>item.price?Math.round((1-item.price/item.originalPrice)*100):0;
-      detailPrice.innerHTML=discountPercent?`<div class="sale-price"><span>${money(item.price)}</span><span class="old-price">${money(item.originalPrice)}</span><span class="discount-pill">-${discountPercent}%</span></div>`:money(item.price);
-      document.getElementById("detailStock").textContent=item.stock>0?`Còn ${item.stock} sản phẩm`:"Hết hàng";
+      const inStock=variants.filter(v=>v.stock>0), priced=(inStock.length?inStock:variants).map(v=>v.price);
+      const lo=Math.min(...priced), hi=Math.max(...priced);
+      if(!detailChosen) detailPrice.innerHTML=lo===hi?money(lo):`${money(lo)} – ${money(hi)}`;
+      else detailPrice.innerHTML=discountPercent?`<div class="sale-price"><span>${money(item.price)}</span><span class="old-price">${money(item.originalPrice)}</span><span class="discount-pill">-${discountPercent}%</span></div>`:money(item.price);
+      const totalStock=variants.reduce((n,v)=>n+Math.max(0,v.stock),0);
+      document.getElementById("detailStock").textContent=!detailChosen?(totalStock>0?`Còn ${totalStock} sản phẩm`:"Hết hàng"):item.stock>0?`Còn ${item.stock} sản phẩm`:"Hết hàng";
       document.getElementById("detailDescription").textContent="Sản phẩm K-Pop chính hãng";
-      document.getElementById("detailInformation").innerHTML=`<p>Nhóm: ${escapeHTML(item.group)}</p><p>Album: ${escapeHTML(item.album)}</p><p>Phân loại: ${escapeHTML(item.specification || "—")}</p><p>Phiên bản: ${escapeHTML(item.specificationName || "—")}</p><p>Mã sản phẩm: ${escapeHTML(item.id)}</p><strong class="shipping-subheading">Survey QR Card</strong><p>Survey QR card đen trắng chỉ có trong album đợt pre-order/first-print. Những đơn đặt sau comeback có thể thuộc đợt in 2 nên không kèm. Đây là thông tin chính thức từ Weverse của nhóm và toàn bộ nghệ sĩ thuộc Hybe, không phải lỗi sản xuất.</p>`;
+      document.getElementById("detailInformation").innerHTML=`<p>Nhóm: ${escapeHTML(item.group)}</p><p>Album: ${escapeHTML(item.album)}</p><p>Phân loại: ${detailChosen?escapeHTML(item.specification || "—"):"chọn bên trên"}</p><p>Phiên bản: ${detailChosen?escapeHTML(item.specificationName || "—"):"chọn bên trên"}</p><p>Mã sản phẩm: ${detailChosen?escapeHTML(item.id):"—"}</p><strong class="shipping-subheading">Survey QR Card</strong><p>Survey QR card đen trắng chỉ có trong album đợt pre-order/first-print. Những đơn đặt sau comeback có thể thuộc đợt in 2 nên không kèm. Đây là thông tin chính thức từ Weverse của nhóm và toàn bộ nghệ sĩ thuộc Hybe, không phải lỗi sản xuất.</p>`;
       document.getElementById("detailQty").textContent=detailQty;
       const chips=document.getElementById("variantChips");chips.replaceChildren();
       const grouped=new Map(); variants.forEach(variant=>{const key=variant.specification || "Phân loại";if(!grouped.has(key)) grouped.set(key,[]);grouped.get(key).push(variant)});
@@ -1499,10 +1508,10 @@
         const group=document.createElement("div");group.className="variant-group";
         const title=document.createElement("div");title.className="variant-group-title";title.textContent=specification;group.appendChild(title);
         const row=document.createElement("div");row.className="chips";
-        groupVariants.forEach(variant=>{const chip=document.createElement("button");chip.type="button";chip.className=`chip ${variant.id===item.id?"selected":""} ${variant.stock<=0?"disabled":""}`;chip.disabled=variant.stock<=0;chip.textContent=variant.specificationName || variant.id;chip.addEventListener("click",()=>{selectedVariant=variant;detailQty=1;renderDetail()});row.appendChild(chip)});
+        groupVariants.forEach(variant=>{const chip=document.createElement("button");chip.type="button";chip.className=`chip ${detailChosen&&variant.id===item.id?"selected":""} ${variant.stock<=0?"disabled":""}`;chip.disabled=variant.stock<=0;chip.textContent=variant.specificationName || variant.id;chip.addEventListener("click",()=>{selectedVariant=variant;detailChosen=true;detailQty=1;renderDetail();showVariantImage(variant)});row.appendChild(chip)});
         group.appendChild(row);chips.appendChild(group);
       });
-      const add=document.getElementById("addCartButton");add.disabled=item.stock<=0; add.textContent=item.stock<=0?"Hết hàng ☁︎":"Thêm vào giỏ 🛒🤍";
+      const add=document.getElementById("addCartButton");const soldOut=detailChosen?item.stock<=0:totalStock<=0;add.disabled=soldOut; add.textContent=soldOut?"Hết hàng ☁︎":"Thêm vào giỏ 🛒🤍";
       renderDetailPromotions(item);
       const detailNote=document.getElementById("detailProductNote");
       detailNote.textContent=bundleNote(item) ? `Chú thích: ${bundleNote(item)}` : "";
@@ -1510,7 +1519,11 @@
     }
     function renderDetailGallery(item){
        const variants=products.filter(product=>product.group===item.group && product.album===item.album);
-       const imageList=(item.images && item.images.length ? item.images : variants.flatMap(product=>product.images || []).concat(variants.map(product=>product.image))).map(safeUrl).filter(Boolean).filter((url,index,list)=>list.indexOf(url)===index);
+       const common=(item.images && item.images.length ? item.images : variants.flatMap(product=>product.images || []).concat(variants.map(product=>product.image))).map(safeUrl).filter(Boolean);
+       const own=variants.map(v=>safeUrl(v.ownImage)).filter(Boolean);
+       const imageList=common.concat(own).filter((url,index,list)=>list.indexOf(url)===index);
+       document.getElementById("detailGallery").dataset.album=`${item.group}\u0000${item.album}`;
+       document.getElementById("detailGallery")._urls=imageList;
        const slides=document.getElementById("detailSlides"),dots=document.getElementById("detailDots");
        slides.replaceChildren();dots.replaceChildren();detailSlideIndex=0;
        const images=imageList.length?imageList:[""];
@@ -1528,10 +1541,17 @@
        document.querySelectorAll("#detailGallery .nav-arrow").forEach(button=>button.hidden=images.length<2);
        dots.hidden=images.length<2;goDetailSlide(0);
     }
+    /** Chọn phân loại có ảnh riêng → hiện đúng ảnh đó (như Shopee). Không có ảnh riêng → giữ ảnh đang xem. */
+    function showVariantImage(variant){
+      const url=safeUrl(variant && variant.ownImage);if(!url)return;
+      const i=(document.getElementById("detailGallery")._urls||[]).indexOf(url);
+      if(i>=0)goDetailSlide(i);
+    }
     function goDetailSlide(index){const count=Number(document.getElementById("detailGallery").dataset.slideCount)||1;detailSlideIndex=(index+count)%count;document.getElementById("detailSlides").style.transform=`translateX(-${detailSlideIndex*100}%)`;document.querySelectorAll("#detailDots .dot").forEach((dot,i)=>dot.classList.toggle("active",i===detailSlideIndex))}
     function moveDetailSlide(delta){goDetailSlide(detailSlideIndex+delta)}
     function changeDetailQty(delta){if(!selectedVariant)return;detailQty=Math.max(1,Math.min(selectedVariant.stock,detailQty+delta));document.getElementById("detailQty").textContent=detailQty}
     function addToCart(){
+      if(selectedVariant && !detailChosen){showToast("Bạn chọn phân loại trước nha ✨");const chips=document.getElementById("variantChips");chips.scrollIntoView({behavior:"smooth",block:"center"});chips.classList.remove("need-pick");void chips.offsetWidth;chips.classList.add("need-pick");return}
       if(!selectedVariant || selectedVariant.stock<=0){showToast("Sản phẩm này hiện đã hết hàng.");return}
       const isPreorder=Boolean(selectedVariant.preorder);
       const hasReady=cart.some(item=>!item.preorder);
