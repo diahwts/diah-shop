@@ -182,11 +182,11 @@
     .cat-tile:active{transform:scale(.97)}
     .cat-tile:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
     .avail{grid-area:filter;margin-top:8px;display:flex;justify-content:flex-end}
-    .avail__track{position:relative;display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--surface-tint);box-shadow:none}
+    .avail__track{position:relative;display:grid;grid-template-columns:34px repeat(3,1fr);align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--surface-tint);box-shadow:none}
     .avail__thumb{position:absolute;top:4px;left:0;height:32px;border-radius:999px;background:#fff;box-shadow:0 6px 18px -6px rgba(120,147,147,.22);opacity:0;transform:translateX(0) scale(.92);pointer-events:none;transition:transform 340ms cubic-bezier(.32,.72,0,1),width 340ms cubic-bezier(.32,.72,0,1),opacity 200ms ease}
     .avail__thumb.is-on{opacity:1}
-    .detail-share{display:inline-flex;align-items:center;gap:6px;margin:2px auto 8px;padding:6px 12px;border:1px solid var(--line,#e3ecec);border-radius:999px;background:#fff;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
-    .avail__btn{position:relative;height:32px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:color 200ms ease,transform 100ms ease-out}
+    .icon-btn[hidden]{display:none}
+    .avail__btn{position:relative;height:32px;padding:0 8px;white-space:nowrap;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:color 200ms ease,transform 100ms ease-out}
     .avail__btn--icon{width:34px;padding:0}
     .avail__btn--icon svg{width:14px;height:14px;display:block}
     .avail__btn:active{transform:scale(.96)}
@@ -328,7 +328,7 @@
    <header class="topbar" aria-label="Thanh điều hướng chính">
     <button type="button" class="brand-button" onclick="showView('home')" aria-label="Về trang chủ"><img data-template-id="brand-logo" class="canva-image brand-img" loading="lazy" src="logoDiah.jpg" alt="Logo Diah.wts Shop màu đen trên nền trắng"></button>
     <div class="top-actions">
-     <button type="button" class="icon-btn" onclick="refreshProducts()" aria-label="Làm mới sản phẩm"><i data-lucide="refresh-cw" width="18"></i></button> <button type="button" class="icon-btn" onclick="showView('cart')" aria-label="Mở giỏ hàng"><i data-lucide="shopping-bag" width="19"></i><span id="cartBadge" class="cart-badge">0</span></button>
+     <button type="button" id="shareProductBtn" class="icon-btn" onclick="copyProductLink()" aria-label="Copy link sản phẩm" title="Copy link sản phẩm" hidden><i data-lucide="link" width="18"></i></button> <button type="button" class="icon-btn" onclick="refreshProducts()" aria-label="Làm mới sản phẩm"><i data-lucide="refresh-cw" width="18"></i></button> <button type="button" class="icon-btn" onclick="showView('cart')" aria-label="Mở giỏ hàng"><i data-lucide="shopping-bag" width="19"></i><span id="cartBadge" class="cart-badge">0</span></button>
     </div>
    </header>
    <main>
@@ -411,7 +411,7 @@
        <button type="button" class="nav-arrow next" onclick="moveDetailSlide(1)" aria-label="Ảnh sản phẩm tiếp theo"><i data-lucide="chevron-right" width="20"></i></button>
        <div id="detailDots" class="dots"></div>
       </div><span id="detailTag" class="eyebrow"></span>
-      <h2 id="detailTitle" class="detail-title"></h2><button type="button" class="detail-share" onclick="copyProductLink()" aria-label="Copy link sản phẩm"><i data-lucide="link" width="14"></i> Copy link sản phẩm</button>
+      <h2 id="detailTitle" class="detail-title"></h2>
       <div id="detailMeta" class="rating-line"><span class="stars">★★★★★</span> <span id="shippingStatus"></span>
       </div>
       <div id="detailPrice" class="price"></div>
@@ -1836,6 +1836,7 @@
         renderProducts();
       }
       document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+      document.getElementById("shareProductBtn").hidden=view!=="detail";
       const targetView=document.getElementById(view+"View");
       void targetView.offsetWidth;
       targetView.classList.add("active");
