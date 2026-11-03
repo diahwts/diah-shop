@@ -512,8 +512,6 @@
         <div class="form-group"><label for="addressDetail">Địa chỉ</label><small class="field-hint">Địa chỉ MỚI: sau sáp nhập theo thứ tự Tỉnh / Thành phố - Quận / Huyện - Phường / Xã - Địa chỉ chi tiết</small><input id="addressDetail" type="text"></div>
         <div class="form-group"><label for="note">Ghi chú giao hàng</label><textarea id="note"></textarea></div>
        </div>
-       <div class="form-card"><label class="payment-choice"><input type="radio" name="payment" value="Chuyển khoản" checked><span>Chuyển khoản</span></label>
-       </div>
        <div data-template-id="demo-notice" class="canva-banner notice" style="color: rgb(16, 43, 70); font-weight: 400; font-style: normal; font-size: 12px;">Đơn hàng của bạn sẽ được lưu vào Google Sheet để xử lý. Sau khi xác nhận đơn, mã QR chuyển khoản sẽ hiển thị.</div>
        <label class="policy-consent" for="policyConsent"><input id="policyConsent" type="checkbox" required><span>Tôi đã đọc và đồng ý với <a href="bao-mat.html" target="_blank" rel="noopener noreferrer">Chính sách Bảo mật</a> và <a href="van-chuyen-doi-tra.html" target="_blank" rel="noopener noreferrer">Giao hàng &amp; Đổi trả</a>.</span></label>
        <button data-template-id="place-order-button" id="placeOrderBtn" class="canva-button primary-btn" type="submit" style="background: rgb(16, 29, 52); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">Xác nhận đơn hàng 🎶🤍</button>
@@ -802,7 +800,7 @@
         const comboBrief=pick(row,["comboBrief","Combo Brief","Promo Brief","Khuyến mãi","Combo"]);
         const bannerBrief=pick(row,["bannerBrief","Banner Brief","Nội dung banner","Banner"]);
         const bundleBrief=pick(row,["bundleBrief","Kèm brief","Kem brief","Kèm","Bundle Brief"]);
-        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate,deposit:Math.max(0,Number(row.deposit)||0),freeship:Boolean(row.freeship)};
+        return {id:modelId,group,album,specification,specificationName,price: salePrice>0 && salePrice<price?salePrice:price,originalPrice:originalPrice || (salePrice>0 && salePrice<price?price:0),salePrice,discountLabel,comboBrief,bannerBrief,bundleBrief,stock,image,images:imageList.length ? imageList : (image ? [image] : []),description,type,preorder,availability,shippingDate,deposit:Math.max(0,Number(row.deposit)||0),depositDue:String(row.depositDue||"").trim(),freeship:Boolean(row.freeship)};
       }).filter(Boolean);
     }
 
@@ -1880,10 +1878,10 @@
     let payMode="full";
     function depositInfo(){
       const items=cart.filter(item=>checkoutKind==="preorder" ? item.preorder : !item.preorder);
-      let deposit=0,any=false;
-      items.forEach(item=>{const fresh=products.find(p=>p.id===item.id)||item;const per=Number(fresh.deposit||0);if(per>0){any=true;deposit+=per*item.quantity}else deposit+=Number(item.price||0)*item.quantity});
+      let deposit=0,any=false;const dues=new Set();
+      items.forEach(item=>{const fresh=products.find(p=>p.id===item.id)||item;const per=Number(fresh.deposit||0);if(per>0){any=true;deposit+=per*item.quantity;dues.add(fresh.depositDue||"khi hàng về")}else deposit+=Number(item.price||0)*item.quantity});
       const total=items.reduce((sum,item)=>sum+Number(item.price||0)*item.quantity,0)-(checkoutKind==="ready" ? comboDiscount() : 0);
-      return any && deposit<total ? {deposit:Math.max(0,deposit),total} : null;
+      return any && deposit<total ? {deposit:Math.max(0,deposit),total,due:[...dues].join(" / ")} : null;
     }
     function renderPaymentOption(){
       const card=document.getElementById("paymentOptionCard");if(!card)return;
@@ -1892,7 +1890,7 @@
       if(payMode!=="deposit")payMode="full";
       card.hidden=false;
       card.innerHTML=`<label class="payment-choice"><input type="radio" name="pay_mode" value="full"${payMode==="full"?" checked":""}><span>Chuyển khoản full <small class="field-hint">Thanh toán ${money(info.total)} ngay.</small></span></label>`+
-        `<label class="payment-choice"><input type="radio" name="pay_mode" value="deposit"${payMode==="deposit"?" checked":""}><span>Cọc ${money(info.deposit)} <small class="field-hint">Còn lại ${money(info.total-info.deposit)} thanh toán khi hàng về (kèm phí cân nếu có).</small></span></label>`;
+        `<label class="payment-choice"><input type="radio" name="pay_mode" value="deposit"${payMode==="deposit"?" checked":""}><span>Cọc ${money(info.deposit)} <small class="field-hint">${/^khi hàng về$/i.test(info.due) ? `Còn lại ${money(info.total-info.deposit)} thanh toán khi hàng về (chưa bao gồm phí cân nếu có).` : `Còn lại ${money(info.total-info.deposit)} thanh toán ${info.due} (chưa bao gồm phí cân thanh toán sau khi hàng về nếu có).`}</small></span></label>`;
       card.querySelectorAll('input[name="pay_mode"]').forEach(input=>input.addEventListener("change",()=>{payMode=input.value}));
     }
     function closeNoteModal(){document.getElementById("noteModal").classList.remove("show")}
