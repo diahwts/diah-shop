@@ -723,12 +723,14 @@
     async function checkOrderAlreadySaved_(orderId, phoneValue){
       if(!orderId || !phoneValue) return false;
       try{
-        const url=`${APPS_SCRIPT_URL}?action=orders&phone=${encodeURIComponent(phoneValue)}&key=${encodeURIComponent(APP_SECRET)}&ts=${Date.now()}`;
+        const url=`${APPS_SCRIPT_URL}?action=orders&phone=${encodeURIComponent(phoneValue)}&request_id=${encodeURIComponent(orderId)}&key=${encodeURIComponent(APP_SECRET)}&ts=${Date.now()}`;
         const response=await fetchWithTimeout(url,{cache:"no-store"},12000);
         if(!response.ok) return false;
         const payload=await response.json();
         if(!payload.ok || !Array.isArray(payload.orders)) return false;
-        return payload.orders.some(o=>o.order_id===orderId);
+        // Trả về mã đơn thật đã lưu (server cấp mã mới, khác mã tạm orderId) — không thấy thì false.
+        const realId=payload.request_order_id || orderId;
+        return payload.orders.some(o=>o.order_id===realId) ? realId : false;
       }catch(error){ return false; }
     }
 
@@ -2091,7 +2093,7 @@
         // có thể CŨNG mất kết nối y hệt, khiến khách bị báo lỗi oan dù đơn đã nằm trong Sheet).
         // Vẫn gọi ngầm (không chặn, không await) để log/đối soát về sau nếu cần, nhưng KHÔNG
         // dùng kết quả của nó để quyết định thành/bại nữa.
-        checkOrderAlreadySaved_(orderId,fields.phone).catch(()=>{});
+        checkOrderAlreadySaved_(orderId,fields.phone).then(id=>{if(id && lastOrder && lastOrder.order_id===orderId){lastOrder.order_id=id;confirmOrderId.textContent=id}}).catch(()=>{});
         result={ok:true,order_id:orderId,combo_discount:groupDiscount};
       }
       if(!result.ok){
@@ -2100,11 +2102,12 @@
         // CÙNG order_id — vẫn đang chạy ngầm ở server dù trình duyệt đã huỷ do quá thời gian chờ.
         // Kiểm tra lại trước khi báo lỗi, để không báo oan trong khi đơn thực ra đã được lưu.
         const alreadySaved=await checkOrderAlreadySaved_(orderId,fields.phone);
-        if(alreadySaved) result={ok:true,order_id:orderId,combo_discount:groupDiscount};
+        if(alreadySaved) result={ok:true,order_id:alreadySaved,combo_discount:groupDiscount};
       }
       setLoading(false);button.disabled=false;
       if(!result.ok){showFormError(friendlyOrderError_(result.error));return}
       order.combo_discount=result.combo_discount || 0;
+      if(result.order_id) order.order_id=result.order_id;
       clearOrderRequestId();
       lastOrder=order;clearCheckoutDraft();cart=cart.filter(item=>checkoutKind==="preorder" ? !item.preorder : item.preorder);updateCartUI();renderConfirmation();showView("confirm");
     }
