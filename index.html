@@ -185,6 +185,7 @@
     .avail__track{position:relative;display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:var(--surface-tint);box-shadow:none}
     .avail__thumb{position:absolute;top:4px;left:0;height:32px;border-radius:999px;background:#fff;box-shadow:0 6px 18px -6px rgba(120,147,147,.22);opacity:0;transform:translateX(0) scale(.92);pointer-events:none;transition:transform 340ms cubic-bezier(.32,.72,0,1),width 340ms cubic-bezier(.32,.72,0,1),opacity 200ms ease}
     .avail__thumb.is-on{opacity:1}
+    .detail-share{display:inline-flex;align-items:center;gap:6px;margin:2px auto 8px;padding:6px 12px;border:1px solid var(--line,#e3ecec);border-radius:999px;background:#fff;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
     .avail__btn{position:relative;height:32px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:color 200ms ease,transform 100ms ease-out}
     .avail__btn--icon{width:34px;padding:0}
     .avail__btn--icon svg{width:14px;height:14px;display:block}
@@ -410,7 +411,7 @@
        <button type="button" class="nav-arrow next" onclick="moveDetailSlide(1)" aria-label="Ảnh sản phẩm tiếp theo"><i data-lucide="chevron-right" width="20"></i></button>
        <div id="detailDots" class="dots"></div>
       </div><span id="detailTag" class="eyebrow"></span>
-      <h2 id="detailTitle" class="detail-title"></h2>
+      <h2 id="detailTitle" class="detail-title"></h2><button type="button" class="detail-share" onclick="copyProductLink()" aria-label="Copy link sản phẩm"><i data-lucide="link" width="14"></i> Copy link sản phẩm</button>
       <div id="detailMeta" class="rating-line"><span class="stars">★★★★★</span> <span id="shippingStatus"></span>
       </div>
       <div id="detailPrice" class="price"></div>
@@ -890,6 +891,7 @@
           localStorage.setItem(PRODUCT_CACHE_KEY,JSON.stringify({products:payload.products,promotions:promotions,savedAt:Date.now()}));
         }catch(cacheError){ console.warn("Không thể lưu bộ nhớ tạm sản phẩm",cacheError); }
         renderPromotions(); lastSync=new Date();
+        if(document.getElementById("checkoutView")?.classList.contains("active")) renderPaymentOption();
         reconcileCart();
         renderCategories(); renderProducts(); updateCartUI();
         setSyncState("ready");
@@ -1207,7 +1209,8 @@
         track.append(thumb,reset);
         [
           {id:"available",avail:"instock",label:"Có sẵn",dot:"#2f9e6f"},
-          {id:"preorder",avail:"preorder",label:"Pre-order",dot:"#d6779d"}
+          {id:"preorder",avail:"preorder",label:"Pre-order",dot:"#d6779d"},
+          {id:"newest",avail:"newest",label:"Mới nhất",dot:"#e0a43a"}
         ].forEach(filter=>{
           const button=document.createElement("button"); button.type="button"; button.className="avail__btn"; button.dataset.avail=filter.avail; button.dataset.filter=filter.id;
           const dot=document.createElement("span"); dot.className="avail__dot"; dot.style.background=filter.dot;
@@ -1311,8 +1314,9 @@
       return card;
     }
     function renderProducts(){
+      setTimeout(openSharedProductOnce,0);
       const variants=products.filter(p=>categoryMatches(p,selectedCategory) && (
-        selectedCatalogFilter==="all" ||
+        selectedCatalogFilter==="all" || selectedCatalogFilter==="newest" ||
         (selectedCatalogFilter==="available" && !p.preorder && p.stock>0) ||
         (selectedCatalogFilter==="preorder" && p.preorder)
       ));
@@ -1354,7 +1358,12 @@
           : (autoRetryTimer ? "Không thể tải sản phẩm. Đang tự động thử lại..." : "Không thể tải sản phẩm. Hãy thử làm mới dữ liệu.");
         grid.appendChild(empty);return;
       }
-      const sections=[availableProducts,preorderProducts,soldOutProducts].filter(section=>section.length);
+      // "Mới nhất": album có phân loại thêm gần nhất (nằm cuối COGS) lên đầu; hết hàng xuống cuối.
+      const rowRank=new Map(products.map((p,i)=>[p.id,i]));
+      const newestRank=v=>Math.max(...v.map(p=>rowRank.get(p.id)||0));
+      const sections=(selectedCatalogFilter==="newest"
+        ? [list.filter(v=>v.some(i=>i.stock>0)).sort((a,b)=>newestRank(b)-newestRank(a)),soldOutProducts.slice().sort((a,b)=>newestRank(b)-newestRank(a))]
+        : [availableProducts,preorderProducts,soldOutProducts]).filter(section=>section.length);
       sections.forEach((section,sectionIndex)=>{
         if(sectionIndex>0){
           const divider=document.createElement("div");divider.className="product-section-divider";divider.setAttribute("aria-hidden","true");divider.textContent="—𐙚—";grid.appendChild(divider);
@@ -1448,6 +1457,26 @@
       return missing;
     }
 
+    // Link sản phẩm: ?sp=<nhóm-album> — cùng công thức với nút "Copy link" ở app Staff.
+    function productSlug(group,album){
+      return `${group||""} ${album||""}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/gi,"d").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+    }
+    function productLink(product){return `${location.origin}${location.pathname}?sp=${productSlug(product.group,product.album)}`}
+    let sharedProductHandled=false;
+    function openSharedProductOnce(){
+      if(sharedProductHandled || !products.length) return;
+      const want=new URLSearchParams(location.search).get("sp");
+      if(!want){sharedProductHandled=true;return}
+      const hit=products.find(p=>p.stock>0 && productSlug(p.group,p.album)===want) || products.find(p=>productSlug(p.group,p.album)===want);
+      if(hit){sharedProductHandled=true;openProduct(hit);return}
+      // Chưa thấy trong dữ liệu tạm (sản phẩm mới) → chờ lần tải mới từ server rồi mới báo không có.
+      if(lastSync){sharedProductHandled=true;showToast("Sản phẩm trong link không còn bán. Bạn xem các sản phẩm khác nhé!")}
+    }
+    async function copyProductLink(){
+      if(!selectedVariant) return;
+      const ok=await copyTextToClipboard(productLink(selectedVariant));
+      showToast(ok ? "Đã copy link sản phẩm" : productLink(selectedVariant));
+    }
     function openProduct(product){
       selectedProduct=product; const variants=products.filter(p=>p.group===product.group && p.album===product.album);
       selectedVariant=variants.find(p=>p.id===product.id && p.stock>0) || variants.find(p=>p.stock>0) || variants[0];detailQty=1;renderDetail();showView("detail");
@@ -1800,6 +1829,7 @@
         // dụng thời gian điền form + quét mã chuyển khoản làm bộ đệm — xem ensureStockPrefetch().
         ensureStockPrefetch();
       }
+      if(view==="home" && location.search.includes("sp=")) history.replaceState(null,"",location.pathname);
       if(view==="home" && selectedCatalogFilter!=="all"){
         selectedCatalogFilter="all";
         renderCategories();
