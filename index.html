@@ -186,6 +186,8 @@
     .avail__thumb{position:absolute;top:4px;left:0;height:32px;border-radius:999px;background:#fff;box-shadow:0 6px 18px -6px rgba(120,147,147,.22);opacity:0;transform:translateX(0) scale(.92);pointer-events:none;transition:transform 340ms cubic-bezier(.32,.72,0,1),width 340ms cubic-bezier(.32,.72,0,1),opacity 200ms ease}
     .avail__thumb.is-on{opacity:1}
     .icon-btn[hidden]{display:none}
+    .confirm-total-wrap{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
+    .confirm-note{margin-top:2px;font-size:12px;font-style:italic;font-weight:400;color:var(--muted);line-height:1.4}
     #variantChips.need-pick{animation:needPick .9s ease}
     @keyframes needPick{0%,100%{box-shadow:none}30%,70%{box-shadow:0 0 0 2px #d6779d;border-radius:14px}}
     .avail__btn{position:relative;height:32px;padding:0 8px;white-space:nowrap;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:color 200ms ease,transform 100ms ease-out}
@@ -534,7 +536,7 @@
        </div>
        <div class="confirm-line"><span data-template-id="order-product-label" class="canva-text">Sản phẩm</span><strong id="confirmProduct" class="confirm-product"></strong>
        </div>
-       <div class="confirm-line"><span data-template-id="order-total-label" class="canva-text">Tổng thanh toán</span><strong id="confirmTotal"></strong>
+       <div class="confirm-line"><span data-template-id="order-total-label" class="canva-text">Tổng thanh toán</span><span class="confirm-total-wrap"><strong id="confirmTotal"></strong><em id="confirmDepositNote" class="confirm-note" hidden></em></span>
        </div>
        <div class="confirm-sep" aria-hidden="true"></div>
        <h2 data-template-id="delivery-heading" class="canva-text">Giao đến</h2>
@@ -2156,11 +2158,13 @@
       setLoading(false);button.disabled=false;
       if(!result.ok){showFormError(friendlyOrderError_(result.error));return}
       order.combo_discount=result.combo_discount || 0;
+      // Đơn cọc: số đã cọc + phần còn lại + thời gian hoàn cọc (server tính lại cọc, ưu tiên số của server)
+      if(depositNow){const paid=Number(result.deposit)||depositNow.deposit;order.deposit_note={paid,rest:Math.max(0,Number(result.payment_shortfall)||(depositNow.total-paid)),due:depositNow.due||"khi hàng về"}}
       if(result.order_id) order.order_id=result.order_id;
       clearOrderRequestId();
       lastOrder=order;clearCheckoutDraft();cart=cart.filter(item=>checkoutKind==="preorder" ? !item.preorder : item.preorder);updateCartUI();renderConfirmation();showView("confirm");
     }
-    function renderConfirmation(){const grouped=[];const groups=new Map();(lastOrder.confirmation_items||[]).forEach(item=>{if(!groups.has(item.album)){const group={album:item.album,items:[]};groups.set(item.album,group);grouped.push(group)}groups.get(item.album).items.push(item)});const productText=grouped.map(group=>`${group.album}\n${group.items.map(item=>`${item.specificationName} × ${item.quantity}`).join("\n")}`).join("\n\n");confirmOrderId.textContent=lastOrder.order_id;confirmProduct.textContent=productText || `${lastOrder.products} × ${lastOrder.quantities}`;confirmTotal.textContent=money(lastOrder.total);confirmAddress.textContent=`${lastOrder.customer_name} · ${lastOrder.phone} — ${lastOrder.address_detail}`;document.querySelector(".confirm-subtitle").textContent="Cảm ơn bạn đẹp đã chốt đơn cùng Diah <3";document.getElementById("confirmInstruction").textContent=`${lastOrder.facebook_name} chỉ cần Copy thông tin đơn hàng rồi gửi qua Facebook Page để shop gửi mã vận đơn nữa là xong ạ ~`;document.getElementById("confirmCopyText").textContent=`${productText || `${lastOrder.products} x ${lastOrder.quantities}`}\n${money(lastOrder.total)}\n${lastOrder.customer_name} · ${lastOrder.phone} · ${lastOrder.address_detail}`;lucide.createIcons();}
+    function renderConfirmation(){const grouped=[];const groups=new Map();(lastOrder.confirmation_items||[]).forEach(item=>{if(!groups.has(item.album)){const group={album:item.album,items:[]};groups.set(item.album,group);grouped.push(group)}groups.get(item.album).items.push(item)});const productText=grouped.map(group=>`${group.album}\n${group.items.map(item=>`${item.specificationName} × ${item.quantity}`).join("\n")}`).join("\n\n");confirmOrderId.textContent=lastOrder.order_id;confirmProduct.textContent=productText || `${lastOrder.products} × ${lastOrder.quantities}`;confirmTotal.textContent=money(lastOrder.total);const depNote=document.getElementById("confirmDepositNote");if(lastOrder.deposit_note){const d=lastOrder.deposit_note;depNote.textContent=`Đã thanh toán ${money(d.paid)}, cần thanh toán nốt ${money(d.rest)} ${d.due}`;depNote.hidden=false}else{depNote.hidden=true;depNote.textContent=""}confirmAddress.textContent=`${lastOrder.customer_name} · ${lastOrder.phone} — ${lastOrder.address_detail}`;document.querySelector(".confirm-subtitle").textContent="Cảm ơn bạn đẹp đã chốt đơn cùng Diah <3";document.getElementById("confirmInstruction").textContent=`${lastOrder.facebook_name} chỉ cần Copy thông tin đơn hàng rồi gửi qua Facebook Page để shop gửi mã vận đơn nữa là xong ạ ~`;document.getElementById("confirmCopyText").textContent=`${productText || `${lastOrder.products} x ${lastOrder.quantities}`}\n${money(lastOrder.total)}\n${lastOrder.customer_name} · ${lastOrder.phone} · ${lastOrder.address_detail}`;lucide.createIcons();}
     async function copyTextToClipboard(value){
       if(!value) return false;
       try{
