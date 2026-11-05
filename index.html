@@ -187,8 +187,11 @@
     .avail__thumb.is-on{opacity:1}
     .icon-btn[hidden]{display:none}
     #checkoutQrBlock{margin-top:14px;text-align:center}
-    #checkoutQrBlock .field-hint{margin:0;font-size:12px}
-    #checkoutQrBlock .bank-copy-row{justify-content:center;margin:8px 0 0;padding:0;background:none;border:0;border-radius:0;text-align:left}
+    #checkoutQrBlock .field-hint{margin:0;font-size:13px;font-style:normal;line-height:1.55}
+    #checkoutQrBlock .field-hint strong{color:var(--ink);font-weight:600}
+    #checkoutQrBlock .bank-copy-row{flex-wrap:wrap;justify-content:center;gap:2px 10px;margin:16px 0 0;padding:0;background:none;border:0;border-radius:0}
+    #checkoutQrBlock .bank-copy-label{flex:0 0 100%;font-style:normal}
+    #checkoutQrBlock .bank-copy-value{min-width:0;max-width:calc(100% - 44px);font-size:16px;line-height:1.35;text-align:center}
     #paymentOptions .payment-choice:first-child{margin-top:0}
     .confirm-total-wrap{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
     .confirm-note{margin-top:2px;font-size:12px;font-style:italic;font-weight:400;color:var(--muted);line-height:1.4}
@@ -522,7 +525,7 @@
        <div id="paymentOptionCard" class="form-card">
         <div id="paymentOptions"></div>
         <div id="checkoutQrBlock">
-         <p class="field-hint"><i>Có thể </i>chụp lại mã QR<i> này, xác nhận đơn trước để giữ đơn, rồi</i> chuyển khoản sau <i>ạ.</i></p>
+         <p class="field-hint">Có thể <strong>chụp lại mã QR</strong> này, xác nhận đơn trước để giữ đơn, rồi <strong>chuyển khoản sau</strong> ạ.</p>
          <div class="bank-copy-row"><span class="bank-copy-label">Copy nội dung chuyển khoản:</span><span id="checkoutCopyValue" class="bank-copy-value">Tên Facebook</span><button class="bank-copy-btn" type="button" onclick="copyCheckoutBankText()" aria-label="Copy nội dung chuyển khoản"><i data-lucide="copy" width="17"></i></button></div>
          <div class="qr-placeholder"><img src="https://lh3.googleusercontent.com/d/1La6YJxvq1zjtW8BUp_sLwKHb958Scxlr" alt="Mã QR chuyển khoản"></div>
          <p id="checkoutTotalNote" class="bank-total-note"></p>
