@@ -186,12 +186,15 @@
     .avail__thumb{position:absolute;top:4px;left:0;height:32px;border-radius:999px;background:#fff;box-shadow:0 6px 18px -6px rgba(120,147,147,.22);opacity:0;transform:translateX(0) scale(.92);pointer-events:none;transition:transform 340ms cubic-bezier(.32,.72,0,1),width 340ms cubic-bezier(.32,.72,0,1),opacity 200ms ease}
     .avail__thumb.is-on{opacity:1}
     .icon-btn[hidden]{display:none}
-    #checkoutQrBlock{margin-top:14px;text-align:center}
+    #checkoutQrBlock{margin-top:22px;text-align:center}
     #checkoutQrBlock .field-hint{margin:0;font-size:13px;font-style:normal;line-height:1.55}
     #checkoutQrBlock .field-hint strong{color:var(--ink);font-weight:600}
-    #checkoutQrBlock .bank-copy-row{flex-wrap:wrap;justify-content:center;gap:2px 10px;margin:16px 0 0;padding:0;background:none;border:0;border-radius:0}
-    #checkoutQrBlock .bank-copy-label{flex:0 0 100%;font-style:normal}
-    #checkoutQrBlock .bank-copy-value{min-width:0;max-width:calc(100% - 44px);font-size:16px;line-height:1.35;text-align:center}
+    #checkoutQrBlock .bank-copy-row{justify-content:center;gap:6px;margin:4px 0 0;padding:0;background:none;border:0;border-radius:0}
+    #checkoutQrBlock .checkout-copy-text{min-width:0;line-height:1.4}
+    #checkoutQrBlock .bank-copy-label{font-style:normal}
+    #checkoutQrBlock .bank-copy-value{display:inline-block;font-size:14px}
+    #checkoutQrBlock .bank-copy-btn{flex:0 0 30px;width:30px;height:30px}
+    #checkoutQrBlock .qr-placeholder{margin-top:14px}
     #paymentOptions .payment-choice:first-child{margin-top:0}
     .confirm-total-wrap{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
     .confirm-note{margin-top:2px;font-size:12px;font-style:italic;font-weight:400;color:var(--muted);line-height:1.4}
@@ -526,7 +529,7 @@
         <div id="paymentOptions"></div>
         <div id="checkoutQrBlock">
          <p class="field-hint">Có thể <strong>chụp lại mã QR</strong> này, xác nhận đơn trước để giữ đơn, rồi <strong>chuyển khoản sau</strong> ạ.</p>
-         <div class="bank-copy-row"><span class="bank-copy-label">Copy nội dung chuyển khoản:</span><span id="checkoutCopyValue" class="bank-copy-value">Tên Facebook</span><button class="bank-copy-btn" type="button" onclick="copyCheckoutBankText()" aria-label="Copy nội dung chuyển khoản"><i data-lucide="copy" width="17"></i></button></div>
+         <div class="bank-copy-row"><span class="checkout-copy-text"><span class="bank-copy-label">Copy nội dung chuyển khoản:</span> <span id="checkoutCopyValue" class="bank-copy-value">Tên Facebook</span></span><button class="bank-copy-btn" type="button" onclick="copyCheckoutBankText()" aria-label="Copy nội dung chuyển khoản"><i data-lucide="copy" width="17"></i></button></div>
          <div class="qr-placeholder"><img src="https://lh3.googleusercontent.com/d/1La6YJxvq1zjtW8BUp_sLwKHb958Scxlr" alt="Mã QR chuyển khoản"></div>
          <p id="checkoutTotalNote" class="bank-total-note"></p>
         </div>
