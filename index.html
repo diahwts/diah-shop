@@ -188,7 +188,7 @@
     .icon-btn[hidden]{display:none}
     #checkoutQrBlock{margin-top:14px;text-align:center}
     #checkoutQrBlock .field-hint{margin:0;font-size:12px}
-    #checkoutQrBlock .bank-copy-row{text-align:left}
+    #checkoutQrBlock .bank-copy-row{justify-content:center;margin:8px 0 0;padding:0;background:none;border:0;border-radius:0;text-align:left}
     #paymentOptions .payment-choice:first-child{margin-top:0}
     .confirm-total-wrap{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
     .confirm-note{margin-top:2px;font-size:12px;font-style:italic;font-weight:400;color:var(--muted);line-height:1.4}
@@ -523,9 +523,9 @@
         <div id="paymentOptions"></div>
         <div id="checkoutQrBlock">
          <p class="field-hint"><i>Có thể </i>chụp lại mã QR<i> này, bấm "Đã thanh toán" trước để giữ đơn, rồi</i> chuyển khoản sau <i>ạ.</i></p>
+         <div class="bank-copy-row"><span class="bank-copy-label">Copy nội dung chuyển khoản:</span><span id="checkoutCopyValue" class="bank-copy-value">Tên Facebook</span><button class="bank-copy-btn" type="button" onclick="copyCheckoutBankText()" aria-label="Copy nội dung chuyển khoản"><i data-lucide="copy" width="17"></i></button></div>
          <div class="qr-placeholder"><img src="https://lh3.googleusercontent.com/d/1La6YJxvq1zjtW8BUp_sLwKHb958Scxlr" alt="Mã QR chuyển khoản"></div>
          <p id="checkoutTotalNote" class="bank-total-note"></p>
-         <div class="bank-copy-row"><span class="bank-copy-label">Copy nội dung chuyển khoản:</span><span id="checkoutCopyValue" class="bank-copy-value">Tên Facebook</span><button class="bank-copy-btn" type="button" onclick="copyCheckoutBankText()" aria-label="Copy nội dung chuyển khoản"><i data-lucide="copy" width="17"></i></button></div>
         </div>
        </div>
        <div data-template-id="demo-notice" class="canva-banner notice" style="color: rgb(16, 43, 70); font-weight: 400; font-style: normal; font-size: 12px;">Đơn hàng của bạn sẽ được lưu vào Google Sheet để xử lý.</div>
