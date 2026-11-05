@@ -1922,7 +1922,7 @@
       const info=depositInfo();
       if(!info||payMode!=="deposit")payMode="full";
       card.innerHTML=`<label class="payment-choice"><input type="radio" name="pay_mode" value="full"${payMode==="full"?" checked":""}><span>Chuyển khoản full <small class="field-hint">Thanh toán ${money(checkoutTotal())} ngay.</small></span></label>`+
-        (!info?"":`<label class="payment-choice"><input type="radio" name="pay_mode" value="deposit"${payMode==="deposit"?" checked":""}><span>Cọc ${money(info.deposit)} <small class="field-hint">${/^khi hàng về$/i.test(info.due) ? `Còn lại ${money(info.total-info.deposit)} thanh toán khi hàng về (chưa bao gồm phí cân nếu có).` : `Còn lại ${money(info.total-info.deposit)} thanh toán ${info.due} (chưa bao gồm phí cân thanh toán sau khi hàng về nếu có).`}</small></span></label>`);
+        (!info?"":`<label class="payment-choice"><input type="radio" name="pay_mode" value="deposit"${payMode==="deposit"?" checked":""}><span>Cọc ${money(info.deposit)} <small class="field-hint">Còn lại ${money(info.total-info.deposit)} thanh toán ${info.due}.</small></span></label>`);
       card.querySelectorAll('input[name="pay_mode"]').forEach(input=>input.addEventListener("change",()=>{payMode=input.value;updateCheckoutQr()}));
       updateCheckoutQr();
     }
