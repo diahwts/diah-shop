@@ -186,6 +186,10 @@
     .avail__thumb{position:absolute;top:4px;left:0;height:32px;border-radius:999px;background:#fff;box-shadow:0 6px 18px -6px rgba(120,147,147,.22);opacity:0;transform:translateX(0) scale(.92);pointer-events:none;transition:transform 340ms cubic-bezier(.32,.72,0,1),width 340ms cubic-bezier(.32,.72,0,1),opacity 200ms ease}
     .avail__thumb.is-on{opacity:1}
     .icon-btn[hidden]{display:none}
+    #checkoutQrBlock{margin-top:14px;text-align:center}
+    #checkoutQrBlock .field-hint{margin:0;font-size:12px}
+    #checkoutQrBlock .bank-copy-row{text-align:left}
+    #paymentOptions .payment-choice:first-child{margin-top:0}
     .confirm-total-wrap{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0}
     .confirm-note{margin-top:2px;font-size:12px;font-style:italic;font-weight:400;color:var(--muted);line-height:1.4}
     #variantChips.need-pick{animation:needPick .9s ease}
@@ -510,15 +514,23 @@
         <label class="payment-choice"><input type="radio" name="shipping_provider" value="Be/Grab"><span>Ship Be/Grab nội thành Hà Nội nhận hàng ngay <small class="field-hint">Phí ship: ~25.000đ bán kính 5km, nhắn Facebook nếu cần shop tra ship trước, hoặc bạn đẹp có thể tự book ship.</small></span></label>
         <label class="payment-choice"><input type="radio" name="shipping_provider" value="Trực tiếp"><span>Giao dịch trực tiếp gần Keangnam, Landmark 72 Hà Nội <small class="field-hint">Thường từ 2~4h chiều các ngày, nhắn Facebook để hẹn trước.</small></span></label>
        </div>
-       <div id="paymentOptionCard" class="form-card" hidden></div>
        <div id="deliveryFields" class="form-card" hidden>
         <div class="form-group"><label for="customerName">Tên người nhận</label><input id="customerName" type="text" autocomplete="name"></div>
         <div class="form-group"><label for="addressDetail">Địa chỉ</label><small class="field-hint">Địa chỉ MỚI: sau sáp nhập theo thứ tự Tỉnh / Thành phố - Quận / Huyện - Phường / Xã - Địa chỉ chi tiết</small><input id="addressDetail" type="text"></div>
         <div class="form-group"><label for="note">Ghi chú giao hàng</label><textarea id="note"></textarea></div>
        </div>
-       <div data-template-id="demo-notice" class="canva-banner notice" style="color: rgb(16, 43, 70); font-weight: 400; font-style: normal; font-size: 12px;">Đơn hàng của bạn sẽ được lưu vào Google Sheet để xử lý. Sau khi xác nhận đơn, mã QR chuyển khoản sẽ hiển thị.</div>
+       <div id="paymentOptionCard" class="form-card">
+        <div id="paymentOptions"></div>
+        <div id="checkoutQrBlock">
+         <p class="field-hint"><i>Có thể </i>chụp lại mã QR<i> này, bấm "Đã thanh toán" trước để giữ đơn, rồi</i> chuyển khoản sau <i>ạ.</i></p>
+         <div class="qr-placeholder"><img src="https://lh3.googleusercontent.com/d/1La6YJxvq1zjtW8BUp_sLwKHb958Scxlr" alt="Mã QR chuyển khoản"></div>
+         <p id="checkoutTotalNote" class="bank-total-note"></p>
+         <div class="bank-copy-row"><span class="bank-copy-label">Copy nội dung chuyển khoản:</span><span id="checkoutCopyValue" class="bank-copy-value">Tên Facebook</span><button class="bank-copy-btn" type="button" onclick="copyCheckoutBankText()" aria-label="Copy nội dung chuyển khoản"><i data-lucide="copy" width="17"></i></button></div>
+        </div>
+       </div>
+       <div data-template-id="demo-notice" class="canva-banner notice" style="color: rgb(16, 43, 70); font-weight: 400; font-style: normal; font-size: 12px;">Đơn hàng của bạn sẽ được lưu vào Google Sheet để xử lý.</div>
        <label class="policy-consent" for="policyConsent"><input id="policyConsent" type="checkbox" required><span>Tôi đã đọc và đồng ý với <a href="bao-mat.html" target="_blank" rel="noopener noreferrer">Chính sách Bảo mật</a> và <a href="van-chuyen-doi-tra.html" target="_blank" rel="noopener noreferrer">Giao hàng &amp; Đổi trả</a>.</span></label>
-       <button data-template-id="place-order-button" id="placeOrderBtn" class="canva-button primary-btn" type="submit" style="background: rgb(16, 29, 52); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">Xác nhận đơn hàng 🎶🤍</button>
+       <button data-template-id="place-order-button" id="placeOrderBtn" class="canva-button primary-btn" type="submit" style="background: rgb(16, 29, 52); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 15px;">Đã thanh toán 🪄✨</button>
       </form>
      </div>
     </section>
@@ -1906,14 +1918,29 @@
       return any && deposit<total ? {deposit:Math.max(0,deposit),total,due:[...dues].join(" / ")} : null;
     }
     function renderPaymentOption(){
-      const card=document.getElementById("paymentOptionCard");if(!card)return;
+      const card=document.getElementById("paymentOptions");if(!card)return;
       const info=depositInfo();
-      if(!info){card.hidden=true;card.innerHTML="";payMode="full";return}
-      if(payMode!=="deposit")payMode="full";
-      card.hidden=false;
-      card.innerHTML=`<label class="payment-choice"><input type="radio" name="pay_mode" value="full"${payMode==="full"?" checked":""}><span>Chuyển khoản full <small class="field-hint">Thanh toán ${money(info.total)} ngay.</small></span></label>`+
-        `<label class="payment-choice"><input type="radio" name="pay_mode" value="deposit"${payMode==="deposit"?" checked":""}><span>Cọc ${money(info.deposit)} <small class="field-hint">${/^khi hàng về$/i.test(info.due) ? `Còn lại ${money(info.total-info.deposit)} thanh toán khi hàng về (chưa bao gồm phí cân nếu có).` : `Còn lại ${money(info.total-info.deposit)} thanh toán ${info.due} (chưa bao gồm phí cân thanh toán sau khi hàng về nếu có).`}</small></span></label>`;
-      card.querySelectorAll('input[name="pay_mode"]').forEach(input=>input.addEventListener("change",()=>{payMode=input.value}));
+      if(!info||payMode!=="deposit")payMode="full";
+      card.innerHTML=`<label class="payment-choice"><input type="radio" name="pay_mode" value="full"${payMode==="full"?" checked":""}><span>Chuyển khoản full <small class="field-hint">Thanh toán ${money(checkoutTotal())} ngay.</small></span></label>`+
+        (!info?"":`<label class="payment-choice"><input type="radio" name="pay_mode" value="deposit"${payMode==="deposit"?" checked":""}><span>Cọc ${money(info.deposit)} <small class="field-hint">${/^khi hàng về$/i.test(info.due) ? `Còn lại ${money(info.total-info.deposit)} thanh toán khi hàng về (chưa bao gồm phí cân nếu có).` : `Còn lại ${money(info.total-info.deposit)} thanh toán ${info.due} (chưa bao gồm phí cân thanh toán sau khi hàng về nếu có).`}</small></span></label>`);
+      card.querySelectorAll('input[name="pay_mode"]').forEach(input=>input.addEventListener("change",()=>{payMode=input.value;updateCheckoutQr()}));
+      updateCheckoutQr();
+    }
+    function checkoutTotal(){
+      const items=cart.filter(item=>checkoutKind==="preorder" ? item.preorder : !item.preorder);
+      return items.reduce((sum,item)=>sum+Number(item.price||0)*item.quantity,0)-(checkoutKind==="ready" ? comboDiscount() : 0);
+    }
+    /** Khối QR ngay trong form: số tiền theo lựa chọn full / cọc + nội dung chuyển khoản theo tên Facebook. */
+    function updateCheckoutQr(){
+      const note=document.getElementById("checkoutTotalNote"),copy=document.getElementById("checkoutCopyValue");
+      const info=payMode==="deposit" ? depositInfo() : null;
+      if(note) note.innerHTML=info ? `Cọc: <strong>${money(info.deposit)}</strong> <small>trên tổng đơn ${money(info.total)}</small>` : `Tổng cộng: <strong>${money(checkoutTotal())}</strong>`;
+      const name=document.getElementById("facebookName")?.value.trim();
+      if(copy) copy.textContent=name || "Tên Facebook";
+    }
+    async function copyCheckoutBankText(){
+      const ok=await copyTextToClipboard(document.getElementById("checkoutCopyValue")?.textContent?.trim());
+      if(ok)showToast("Đã copy nội dung chuyển khoản.");
     }
     function closeNoteModal(){document.getElementById("noteModal").classList.remove("show")}
     function updatePaymentModalInfo(){
@@ -1928,14 +1955,7 @@
         if(confirmBtn) confirmBtn.hidden = !(paymentContext.amount > 0);
         return;
       }
-      if(confirmBtn) confirmBtn.hidden = false;
-      const facebookName=document.getElementById("facebookName");
-      const note=document.querySelector("#paymentModal .bank-total-note");
-      const info=payMode==="deposit" ? depositInfo() : null;
-      if(note) note.innerHTML=info ? `Cọc: <strong id="paymentTotalAmount">${money(info.deposit)}</strong> <small>trên tổng đơn ${money(info.total)}</small>` : `Tổng cộng: <strong id="paymentTotalAmount">0 ₫</strong>`;
-      const amountEl=document.getElementById("paymentTotalAmount");
-      if(!info && amountEl) amountEl.textContent = total ? total.textContent : money(subtotal() - comboDiscount());
-      if(paymentCopy) paymentCopy.textContent = facebookName && facebookName.value.trim() ? facebookName.value.trim() : "Tên Facebook";
+      updateCheckoutQr();
     }
     function closePaymentModal(){document.getElementById("paymentModal").classList.remove("show");paymentContext={mode:"checkout"}}
     async function copyBankCopyText(){
@@ -2077,13 +2097,11 @@
       const missing=missingBundleRequirements();
       if(missing.length){document.getElementById("noteModalText").textContent=`Chú thích: ${missing[0].brief}`;document.getElementById("noteModal").classList.add("show");return}
       if(!paymentConfirmed){
-        updatePaymentModalInfo();document.getElementById("paymentModal").classList.add("show");
         // Thường lúc này đã có sẵn (hoặc đang chạy dở) bước kiểm tra tồn kho từ lúc khách bấm
         // "Thanh toán" ở Giỏ hàng (xem showView). Gọi lại đây chỉ để đảm bảo có prefetch chạy
         // ngầm trong lúc khách thao tác chuyển khoản, phòng trường hợp dữ liệu đã cũ (khách điền
         // form lâu) — ensureStockPrefetch() tự bỏ qua nếu đang có 1 lượt gọi dở dang.
         ensureStockPrefetch();
-        return;
       }
       const button=document.getElementById("placeOrderBtn");button.disabled=true;
       setLoading(true,"Đang lưu đơn hàng…","Có thể mất tới 15 giây. Vì trang web đã thêm bước xác thực bảo mật để bảo vệ thông tin đơn hàng của bạn nên có thể lâu hơn 1 chút.");
